@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Test gui."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import logging
 import os
@@ -16,9 +14,10 @@ from phylib.utils import Bunch, load_json, save_json
 logger = logging.getLogger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test GUI state
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class MyClass(object):
     pass
@@ -26,7 +25,8 @@ class MyClass(object):
 
 def test_get_default_state_path():
     assert str(_get_default_state_path(MyClass())).endswith(
-        os.sep.join(('gui', 'tests', 'static', 'state.json')))
+        os.sep.join(('gui', 'tests', 'static', 'state.json'))
+    )
 
 
 def test_gui_state_view_1(tempdir):
@@ -44,7 +44,7 @@ def test_gui_state_view_1(tempdir):
     shutil.copy(state._path, default_path)
     state._path.unlink()
 
-    logger.info("Create new GUI state.")
+    logger.info('Create new GUI state.')
     # The default state.json should be automatically copied and loaded.
     state = GUIState(path, default_state_path=default_path)
     assert state.MyView0.hello == 'world'

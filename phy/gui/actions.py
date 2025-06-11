@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Actions and snippets."""
 
 
@@ -23,6 +21,7 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 # Snippet parsing utilities
 # -----------------------------------------------------------------------------
+
 
 def _parse_arg(s):
     """Parse a number or string."""
@@ -64,13 +63,13 @@ def _prompt_args(title, docstring, default=None):
     # There are args, need to display the dialog.
     # Extract Example: `...` in the docstring to put a predefined text
     # in the input dialog.
-    logger.debug("Prompting arguments for %s", title)
+    logger.debug('Prompting arguments for %s', title)
     r = re.search('Example: `([^`]+)`', docstring)
-    docstring_ = docstring[:r.start()].strip() if r else docstring
+    docstring_ = docstring[: r.start()].strip() if r else docstring
     try:
         text = str(default()) if default else (r.group(1) if r else None)
     except Exception as e:  # pragma: no cover
-        logger.error("Error while handling user input: %s", str(e))
+        logger.error('Error while handling user input: %s', str(e))
         return
     s, ok = input_dialog(title, docstring_, text)
     if not ok or not s:
@@ -83,6 +82,7 @@ def _prompt_args(title, docstring, default=None):
 # -----------------------------------------------------------------------------
 # Show shortcut utility functions
 # -----------------------------------------------------------------------------
+
 
 def _get_shortcut_string(shortcut):
     """Return a string representation of a shortcut."""
@@ -153,6 +153,7 @@ def show_shortcuts_snippets(actions):
 # Actions
 # -----------------------------------------------------------------------------
 
+
 def _alias(name):
     # Get the alias from the character after & if it exists.
     alias = name[name.index('&') + 1] if '&' in name else name
@@ -170,10 +171,10 @@ def _expected_args(f):
         f_args.remove('self')
     # Remove arguments with defaults from the list.
     if len(argspec.defaults or ()):
-        f_args = f_args[:-len(argspec.defaults)]
+        f_args = f_args[: -len(argspec.defaults)]
     # Remove arguments supplied in a partial.
     if isinstance(f, partial):
-        f_args = f_args[len(f.args):]
+        f_args = f_args[len(f.args) :]
         f_args = [arg for arg in f_args if arg not in f.keywords]
     return tuple(f_args)
 
@@ -196,21 +197,23 @@ def _create_qaction(gui, **kwargs):
         if kwargs.get('checkable', None):
             args = (is_checked,) + args
         if kwargs.get('prompt', None):
-            args += _prompt_args(
-                title, docstring, default=kwargs.get('prompt_default', None)) or ()
+            args += (
+                _prompt_args(title, docstring, default=kwargs.get('prompt_default', None)) or ()
+            )
             if not args:  # pragma: no cover
-                logger.debug("User cancelled input prompt, aborting.")
+                logger.debug('User cancelled input prompt, aborting.')
                 return
         if len(args) < n_args:
             logger.warning(
-                "Invalid function arguments: expecting %d but got %d", n_args, len(args))
+                'Invalid function arguments: expecting %d but got %d', n_args, len(args)
+            )
             return
         try:
             # Set a busy cursor if set_busy is True.
             with busy_cursor(kwargs.get('set_busy', None)):
                 return callback(*args)
         except Exception:  # pragma: no cover
-            logger.warning("Error when executing action %s.", name)
+            logger.warning('Error when executing action %s.', name)
             logger.debug(''.join(traceback.format_exception(*sys.exc_info())))
 
     action.triggered.connect(wrapped)
@@ -255,9 +258,18 @@ class Actions(object):
         Map action names to snippets (regular strings).
 
     """
+
     def __init__(
-            self, gui, name=None, menu=None, submenu=None, view=None,
-            insert_menu_before=None, default_shortcuts=None, default_snippets=None):
+        self,
+        gui,
+        name=None,
+        menu=None,
+        submenu=None,
+        view=None,
+        insert_menu_before=None,
+        default_shortcuts=None,
+        default_snippets=None,
+    ):
         self._actions_dict = {}
         self._aliases = {}
         self._default_shortcuts = default_shortcuts or {}
@@ -302,10 +314,28 @@ class Actions(object):
         if menu:
             return self.gui.get_menu(menu)
 
-    def add(self, callback=None, name=None, shortcut=None, alias=None, prompt=False, n_args=None,
-            docstring=None, menu=None, submenu=None, view=None, view_submenu=None, verbose=True,
-            checkable=False, checked=False, set_busy=False, prompt_default=None,
-            show_shortcut=True, icon=None, toolbar=False):
+    def add(
+        self,
+        callback=None,
+        name=None,
+        shortcut=None,
+        alias=None,
+        prompt=False,
+        n_args=None,
+        docstring=None,
+        menu=None,
+        submenu=None,
+        view=None,
+        view_submenu=None,
+        verbose=True,
+        checkable=False,
+        checked=False,
+        set_busy=False,
+        prompt_default=None,
+        show_shortcut=True,
+        icon=None,
+        toolbar=False,
+    ):
         """Add an action with a keyboard shortcut.
 
         Parameters
@@ -381,14 +411,15 @@ class Actions(object):
         action = _create_qaction(self.gui, **kwargs)
         action_obj = Bunch(qaction=action, **kwargs)
         if verbose and not name.startswith('_'):
-            logger.log(5, "Add action `%s` (%s).", name, _get_shortcut_string(action.shortcut()))
+            logger.log(5, 'Add action `%s` (%s).', name, _get_shortcut_string(action.shortcut()))
         self.gui.addAction(action)
 
         # Do not show private actions in the menu.
         if not name.startswith('_'):
             # Find the menu in which the action should be added.
             qmenu = self._get_menu(
-                menu=menu, submenu=submenu, view=view, view_submenu=view_submenu)
+                menu=menu, submenu=submenu, view=view, view_submenu=view_submenu
+            )
             if qmenu:
                 qmenu.addAction(action)
 
@@ -455,11 +486,11 @@ class Actions(object):
         if not action:
             raise ValueError("Action `{}` doesn't exist.".format(name))
         if not name.startswith('_'):
-            logger.debug("Execute action `%s`.", name)
+            logger.debug('Execute action `%s`.', name)
         try:
             return action.callback(*args)
         except TypeError as e:
-            logger.warning("Invalid action arguments: " + str(e))
+            logger.warning('Invalid action arguments: ' + str(e))
             return
 
     def remove(self, name):
@@ -508,6 +539,7 @@ class Actions(object):
 # Snippets
 # -----------------------------------------------------------------------------
 
+
 class Snippets(object):
     """Provide keyboard snippets to quickly execute actions from a GUI.
 
@@ -542,11 +574,11 @@ class Snippets(object):
     """
 
     # HACK: Unicode characters do not seem to work on Python 2
-    cursor = '\u200A\u258C'
+    cursor = '\u200a\u258c'
 
     # Allowed characters in snippet mode.
     # A Qt shortcut will be created for every character.
-    _snippet_chars = r"abcdefghijklmnopqrstuvwxyz0123456789 ,.;?!_-+~=*/\(){}[]<>&|"
+    _snippet_chars = r'abcdefghijklmnopqrstuvwxyz0123456789 ,.;?!_-+~=*/\(){}[]<>&|'
 
     def __init__(self, gui):
         self.gui = gui
@@ -571,7 +603,7 @@ class Snippets(object):
         msg = self.gui.status_message
         n = len(msg)
         n_cur = len(self.cursor)
-        return msg[:n - n_cur]
+        return msg[: n - n_cur]
 
     @command.setter
     def command(self, value):
@@ -584,13 +616,13 @@ class Snippets(object):
         """Erase the last character in the snippet command."""
         if self.command == ':':
             return
-        logger.log(5, "Snippet keystroke `Backspace`.")
+        logger.log(5, 'Snippet keystroke `Backspace`.')
         self.command = self.command[:-1]
 
     def _enter(self):
         """Disable the snippet mode and execute the command."""
         command = self.command
-        logger.log(5, "Snippet keystroke `Enter`.")
+        logger.log(5, 'Snippet keystroke `Enter`.')
         # NOTE: we need to set back the actions (mode_off) before running
         # the command.
         self.mode_off()
@@ -607,29 +639,29 @@ class Snippets(object):
 
             def _make_func(char):
                 def callback():
-                    logger.log(5, "Snippet keystroke `%s`.", char)
+                    logger.log(5, 'Snippet keystroke `%s`.', char)
                     self.command += char
+
                 return callback
 
             # Lowercase letters.
             self.actions.add(
-                name='_snippet_{}'.format(i),
-                shortcut=char,
-                callback=_make_func(char))
+                name='_snippet_{}'.format(i), shortcut=char, callback=_make_func(char)
+            )
 
             # Uppercase letters.
             if char in self._snippet_chars[:26]:
                 self.actions.add(
                     name='_snippet_{}_upper'.format(i),
                     shortcut='shift+' + char,
-                    callback=_make_func(char.upper()))
+                    callback=_make_func(char.upper()),
+                )
 
+        self.actions.add(name='_snippet_backspace', shortcut='backspace', callback=self._backspace)
         self.actions.add(
-            name='_snippet_backspace', shortcut='backspace', callback=self._backspace)
-        self.actions.add(
-            name='_snippet_activate', shortcut=('enter', 'return'), callback=self._enter)
-        self.actions.add(
-            name='_snippet_disable', shortcut='escape', callback=self.mode_off)
+            name='_snippet_activate', shortcut=('enter', 'return'), callback=self._enter
+        )
+        self.actions.add(name='_snippet_disable', shortcut='escape', callback=self.mode_off)
 
     def run(self, snippet):
         """Execute a snippet command.
@@ -642,7 +674,7 @@ class Snippets(object):
         snippet_args = _parse_snippet(snippet)
         name = snippet_args[0]
 
-        logger.debug("Processing snippet `%s`.", snippet)
+        logger.debug('Processing snippet `%s`.', snippet)
         try:
             # Try to run the snippet on all attached Actions instances.
             for actions in self.gui.actions:
@@ -655,7 +687,7 @@ class Snippets(object):
                     pass
             logger.warning("Couldn't find action `%s`.", name)
         except Exception as e:
-            logger.warning("Error when executing snippet: \"%s\".", str(e))
+            logger.warning('Error when executing snippet: "%s".', str(e))
             logger.debug(''.join(traceback.format_exception(*sys.exc_info())))
 
     def is_mode_on(self):
@@ -664,7 +696,7 @@ class Snippets(object):
 
     def mode_on(self):
         """Enable the snippet mode."""
-        logger.debug("Snippet mode enabled, press `escape` to leave this mode.")
+        logger.debug('Snippet mode enabled, press `escape` to leave this mode.')
         # Save the current status message.
         self._status_message = self.gui.status_message
         self.gui.lock_status()

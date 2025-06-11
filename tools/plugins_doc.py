@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Import plugin code from `plugins/` files into the Markdown documentation file `plugins.md`."""
 
 import ast
@@ -54,9 +53,9 @@ for m in pattern.finditer(plugins_doc):
     assert plugin_contents.strip() == m.group(2).strip()
 
 
-print("DIFF\n----\n")
+print('DIFF\n----\n')
 a, b = plugins_doc0.splitlines(), plugins_doc.splitlines()
 pprint('\n'.join([li for li in difflib.ndiff(a, b) if li[0] != ' ']))
 
 plugins_file.write_text(plugins_doc)
-print("Updated doc.")
+print('Updated doc.')

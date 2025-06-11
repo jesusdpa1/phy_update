@@ -1,27 +1,45 @@
-# -*- coding: utf-8 -*-
-
 """Test Qt utilities."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 from pytest import raises
 
 from phylib.utils.testing import captured_logging
 from ..qt import (
-    QMessageBox, Qt, QWebEngineView, QTimer, _button_name_from_enum, _button_enum_from_name,
-    prompt, screen_size, is_high_dpi, _wait_signal, require_qt, create_app, QApplication,
-    WebView, busy_cursor, AsyncCaller, _wait, Worker, _block, screenshot, screenshot_default_path,
-    Debouncer, thread_pool)
+    QMessageBox,
+    Qt,
+    QWebEngineView,
+    QTimer,
+    _button_name_from_enum,
+    _button_enum_from_name,
+    prompt,
+    screen_size,
+    is_high_dpi,
+    _wait_signal,
+    require_qt,
+    create_app,
+    QApplication,
+    WebView,
+    busy_cursor,
+    AsyncCaller,
+    _wait,
+    Worker,
+    _block,
+    screenshot,
+    screenshot_default_path,
+    Debouncer,
+    thread_pool,
+)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Tests
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_require_qt_with_app():
-
     @require_qt
     def f():
         pass
@@ -32,7 +50,6 @@ def test_require_qt_with_app():
 
 
 def test_require_qt_without_app(qapp):
-
     @require_qt
     def f():
         pass
@@ -59,6 +76,7 @@ def test_worker(qtbot):
 
     def f():  # pragma: no cover
         _l.append(0)
+
     w = Worker(f)
     pool.start(w)
     _wait(10)
@@ -104,7 +122,7 @@ def test_debouncer_2(qtbot):
     d.submit(f, 2)
     qtbot.wait(50)
 
-    d.stop_waiting(.001)
+    d.stop_waiting(0.001)
     qtbot.wait(30)
     # The last submission should be called *before* the expiration of the 100ms debouncer delay,
     # because we called stop_waiting with a very short delay.
@@ -114,7 +132,7 @@ def test_debouncer_2(qtbot):
 def test_block(qtbot):
     create_app()
     with raises(RuntimeError):
-        _block(lambda: False, timeout=.1)
+        _block(lambda: False, timeout=0.1)
 
 
 def test_wait_signal(qtbot):
@@ -137,7 +155,6 @@ def test_wait_signal(qtbot):
 
 
 def test_web_view(qtbot):
-
     view = WebView()
 
     def _assert(text):
@@ -149,7 +166,7 @@ def test_web_view(qtbot):
     qtbot.waitForWindowShown(view)
     _block(lambda: _assert('hello'))
 
-    view.set_html("world")
+    view.set_html('world')
     _block(lambda: _assert('world'))
     view.close()
 
@@ -163,7 +180,7 @@ def test_javascript_1(qtbot):
         qtbot.waitForWindowShown(view)
         _block(lambda: view.html is not None)
         view.close()
-    assert buf.getvalue() == ""
+    assert buf.getvalue() == ''
 
 
 def test_javascript_2(qtbot):
@@ -180,7 +197,6 @@ def test_javascript_2(qtbot):
 
 
 def test_screenshot(qtbot, tempdir):
-
     path = tempdir / 'capture.png'
     view = WebView()
     assert str(screenshot_default_path(view, dir=tempdir)).startswith(str(tempdir))
@@ -193,11 +209,10 @@ def test_screenshot(qtbot, tempdir):
 
 
 def test_prompt(qtbot):
-
     assert _button_name_from_enum(QMessageBox.Save) == 'save'
     assert _button_enum_from_name('save') == QMessageBox.Save
 
-    box = prompt("How are you doing?", buttons=['save', 'cancel', 'close'])
+    box = prompt('How are you doing?', buttons=['save', 'cancel', 'close'])
     qtbot.mouseClick(box.buttons()[0], Qt.LeftButton)
     assert 'save' in str(box.clickedButton().text()).lower()
 

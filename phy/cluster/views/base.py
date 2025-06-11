@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Manual clustering views."""
 
 
@@ -27,6 +25,7 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 # Manual clustering view
 # -----------------------------------------------------------------------------
+
 
 def _get_bunch_bounds(bunch):
     """Return the data bounds of a bunch."""
@@ -58,6 +57,7 @@ class ManualClusteringView(object):
     - `toggle_auto_update(view)`
 
     """
+
     default_shortcuts = {}
     default_snippets = {}
     auto_update = True  # automatically update the view when the cluster selection changes
@@ -213,7 +213,7 @@ class ManualClusteringView(object):
 
         # HACK: disable threading mechanism for now
         # if getattr(gui, '_enable_threading', True):
-        if 0:   # pragma: no cover
+        if 0:  # pragma: no cover
             # This is only for OpenGL views.
             self.canvas.set_lazy(True)
             thread_pool().start(worker)
@@ -255,12 +255,17 @@ class ManualClusteringView(object):
         self.set_state(gui.state.get_view_state(self))
 
         self.actions = Actions(
-            gui, name=self.name, view=self,
-            default_shortcuts=shortcuts, default_snippets=self.default_snippets)
+            gui,
+            name=self.name,
+            view=self,
+            default_shortcuts=shortcuts,
+            default_snippets=self.default_snippets,
+        )
 
         # Freeze and unfreeze the view when selecting clusters.
         self.actions.add(
-            self.toggle_auto_update, checkable=True, checked=self.auto_update, show_shortcut=False)
+            self.toggle_auto_update, checkable=True, checked=self.auto_update, show_shortcut=False
+        )
         self.actions.add(self.screenshot, show_shortcut=False)
         self.actions.add(self.close, show_shortcut=False)
         self.actions.separator()
@@ -273,7 +278,7 @@ class ManualClusteringView(object):
         def on_close_view(view_, gui):
             if view_ != self:
                 return
-            logger.debug("Close view %s.", self.name)
+            logger.debug('Close view %s.', self.name)
             self._closed = True
             gui.remove_menu(self.name)
             unconnect(on_select)
@@ -309,7 +314,7 @@ class ManualClusteringView(object):
 
     def toggle_auto_update(self, checked):
         """When on, the view is automatically updated when the cluster selection changes."""
-        logger.debug("%s auto update for %s.", 'Enable' if checked else 'Disable', self.name)
+        logger.debug('%s auto update for %s.', 'Enable' if checked else 'Disable', self.name)
         self.auto_update = checked
         emit('toggle_auto_update', self, checked)
 
@@ -334,7 +339,7 @@ class ManualClusteringView(object):
         May be overriden.
 
         """
-        logger.debug("Set state for %s.", getattr(self, 'name', self.__class__.__name__))
+        logger.debug('Set state for %s.', getattr(self, 'name', self.__class__.__name__))
         for k, v in state.items():
             setattr(self, k, v)
 
@@ -355,6 +360,7 @@ class ManualClusteringView(object):
 # -----------------------------------------------------------------------------
 # Mixins for manual clustering views
 # -----------------------------------------------------------------------------
+
 
 class BaseWheelMixin(object):
     def on_mouse_wheel(self, e):
@@ -420,8 +426,7 @@ class BaseGlobalView(object):
 
 
 class BaseColorView(BaseWheelMixin):
-    """Provide facilities to add and select color schemes in the view.
-    """
+    """Provide facilities to add and select color schemes in the view."""
 
     def __init__(self, *args, **kwargs):
         super(BaseColorView, self).__init__(*args, **kwargs)
@@ -432,8 +437,14 @@ class BaseColorView(BaseWheelMixin):
         self.add_color_scheme(fun=0, name='blank', colormap='blank', categorical=True)
 
     def add_color_scheme(
-            self, fun=None, name=None, cluster_ids=None,
-            colormap=None, categorical=None, logarithmic=None):
+        self,
+        fun=None,
+        name=None,
+        cluster_ids=None,
+        colormap=None,
+        categorical=None,
+        logarithmic=None,
+    ):
         """Add a color scheme to the view. Can be used as follows:
 
         ```python
@@ -445,24 +456,33 @@ class BaseColorView(BaseWheelMixin):
         """
         if fun is None:
             return partial(
-                self.add_color_scheme, name=name, cluster_ids=cluster_ids,
-                colormap=colormap, categorical=categorical, logarithmic=logarithmic)
+                self.add_color_scheme,
+                name=name,
+                cluster_ids=cluster_ids,
+                colormap=colormap,
+                categorical=categorical,
+                logarithmic=logarithmic,
+            )
         field = name or fun.__name__
         cs = ClusterColorSelector(
-            fun, cluster_ids=cluster_ids,
-            colormap=colormap, categorical=categorical, logarithmic=logarithmic)
+            fun,
+            cluster_ids=cluster_ids,
+            colormap=colormap,
+            categorical=categorical,
+            logarithmic=logarithmic,
+        )
         self.color_schemes.add(field, cs)
 
     def get_cluster_colors(self, cluster_ids, alpha=1.0):
         """Return the cluster colors depending on the currently-selected color scheme."""
         cs = self.color_schemes.get()
         if cs is None:  # pragma: no cover
-            raise RuntimeError("Make sure that at least a color scheme is added.")
+            raise RuntimeError('Make sure that at least a color scheme is added.')
         return cs.get_colors(cluster_ids, alpha=alpha)
 
     def _neighbor_color_scheme(self, dir=+1):
         name = self.color_schemes._neighbor(dir=dir)
-        logger.debug("Switch to `%s` color scheme in %s.", name, self.__class__.__name__)
+        logger.debug('Switch to `%s` color scheme in %s.', name, self.__class__.__name__)
         self.update_color()
         self.update_select_color()
         self.update_status()
@@ -491,7 +511,7 @@ class BaseColorView(BaseWheelMixin):
     @color_scheme.setter
     def color_scheme(self, color_scheme):
         """Change the current color scheme."""
-        logger.debug("Set color scheme to %s.", color_scheme)
+        logger.debug('Set color scheme to %s.', color_scheme)
         self.color_schemes.set(color_scheme)
         self.update_color()
         self.update_status()
@@ -506,13 +526,17 @@ class BaseColorView(BaseWheelMixin):
         def _make_color_scheme_action(cs):
             def callback():
                 self.color_scheme = cs
+
             return callback
 
         for cs in self.color_schemes.keys():
             name = 'Change color scheme to %s' % cs
             self.actions.add(
-                _make_color_scheme_action(cs), show_shortcut=False,
-                name=name, view_submenu='Change color scheme')
+                _make_color_scheme_action(cs),
+                show_shortcut=False,
+                name=name,
+                view_submenu='Change color scheme',
+            )
 
         self.actions.add(self.next_color_scheme)
         self.actions.add(self.previous_color_scheme)
@@ -532,6 +556,7 @@ class ScalingMixin(BaseWheelMixin):
     """Provide features to change the scaling.
 
     Implement increase, decrease, reset actions, as well as control+wheel shortcut."""
+
     _scaling_param_increment = 1.1
     _scaling_param_min = 1e-3
     _scaling_param_max = 1e3
@@ -565,14 +590,16 @@ class ScalingMixin(BaseWheelMixin):
     def increase(self):
         """Increase the scaling parameter."""
         value = self._get_scaling_value()
-        self._set_scaling_value(min(
-            self._scaling_param_max, value * self._scaling_param_increment))
+        self._set_scaling_value(
+            min(self._scaling_param_max, value * self._scaling_param_increment)
+        )
 
     def decrease(self):
         """Decrease the scaling parameter."""
         value = self._get_scaling_value()
-        self._set_scaling_value(max(
-            self._scaling_param_min, value / self._scaling_param_increment))
+        self._set_scaling_value(
+            max(self._scaling_param_min, value / self._scaling_param_increment)
+        )
 
     def reset_scaling(self):
         """Reset the scaling to the default value."""
@@ -580,8 +607,8 @@ class ScalingMixin(BaseWheelMixin):
 
 
 class MarkerSizeMixin(BaseWheelMixin):
-    _marker_size = 5.
-    _default_marker_size = 5.
+    _marker_size = 5.0
+    _default_marker_size = 5.0
     _marker_size_min = 1e-2
     _marker_size_max = 1e2
     _marker_size_increment = 1.1
@@ -616,12 +643,14 @@ class MarkerSizeMixin(BaseWheelMixin):
     def increase_marker_size(self):
         """Increase the scaling parameter."""
         self.marker_size = min(
-            self._marker_size_max, self.marker_size * self._marker_size_increment)
+            self._marker_size_max, self.marker_size * self._marker_size_increment
+        )
 
     def decrease_marker_size(self):
         """Decrease the scaling parameter."""
         self.marker_size = max(
-            self._marker_size_min, self.marker_size / self._marker_size_increment)
+            self._marker_size_min, self.marker_size / self._marker_size_increment
+        )
 
     def reset_marker_size(self):
         """Reset the scaling to the default value."""
@@ -640,7 +669,7 @@ class MarkerSizeMixin(BaseWheelMixin):
 class LassoMixin(object):
     def on_request_split(self, sender=None):
         """Return the spikes enclosed by the lasso."""
-        if (self.canvas.lasso.count < 3 or not len(self.cluster_ids)):  # pragma: no cover
+        if self.canvas.lasso.count < 3 or not len(self.cluster_ids):  # pragma: no cover
             return np.array([], dtype=np.int64)
 
         # Get all points from all clusters.
@@ -661,7 +690,7 @@ class LassoMixin(object):
             pos.append(points)
             spike_ids.append(bunch.spike_ids)
         if not pos:  # pragma: no cover
-            logger.warning("Empty lasso.")
+            logger.warning('Empty lasso.')
             return np.array([])
         pos = np.vstack(pos)
         pos = range_transform([self.data_bounds], [NDC], pos)

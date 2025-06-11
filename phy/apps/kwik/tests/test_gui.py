@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Testing the Kwik GUI."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import logging
 from pathlib import Path
@@ -32,8 +30,12 @@ def _kwik_controller(tempdir, kwik_only=False):
         shutil.copy(loc_path, tempdir / loc_path.name)
     kwik_path = tempdir / 'hybrid_10sec.kwik'
     return KwikController(
-        kwik_path, channel_group=0, config_dir=tempdir / 'config',
-        clear_cache=True, enable_threading=False)
+        kwik_path,
+        channel_group=0,
+        config_dir=tempdir / 'config',
+        clear_cache=True,
+        enable_threading=False,
+    )
 
 
 def test_kwik_describe(qtbot, tempdir):

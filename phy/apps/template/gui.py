@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """Template GUI."""
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import logging
 from operator import itemgetter
@@ -25,17 +23,19 @@ from ..base import WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin, BaseC
 logger = logging.getLogger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Custom views
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class TemplateFeatureView(ScatterView):
     """Scatter view showing the template features."""
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Template Controller
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin, BaseController):
     """Controller for the Template GUI.
@@ -156,9 +156,9 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
     def get_channel_amplitudes(self, cluster_id):
         """Return the channel amplitudes of the best channels of a given cluster."""
         template_id = self.get_template_for_cluster(cluster_id)
-        template = self.model.get_template(template_id, amplitude_threshold=.5)
+        template = self.model.get_template(template_id, amplitude_threshold=0.5)
         if not template:  # pragma: no cover
-            return [0], [0.]
+            return [0], [0.0]
         m, M = template.amplitude.min(), template.amplitude.max()
         d = (M - m) if m < M else 1.0
         return template.channel_ids, (template.amplitude - m) / d
@@ -195,9 +195,10 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
         return TemplateFeatureView(coords=self._get_template_features)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Template commands
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def template_gui(params_path, **kwargs):  # pragma: no cover
     """Launch the Template GUI."""
@@ -210,8 +211,7 @@ def template_gui(params_path, **kwargs):  # pragma: no cover
     # Automatically export spike waveforms when using compressed raw ephys.
     if model.spike_waveforms is None and isinstance(model.traces, MtscompEphysReader):
         # TODO: customizable values below.
-        model.save_spikes_subset_waveforms(
-            max_n_spikes_per_template=500, max_n_channels=16)
+        model.save_spikes_subset_waveforms(max_n_spikes_per_template=500, max_n_channels=16)
 
     create_app()
     controller = TemplateController(model=model, dir_path=dir_path, **kwargs)

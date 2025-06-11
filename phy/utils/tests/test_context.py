@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Test context."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 from pickle import dump, load
 
@@ -16,9 +14,10 @@ from phylib.io.array import write_array, read_array
 from ..context import Context, _fullname
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Fixtures
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 @fixture(scope='function')
 def context(tempdir):
@@ -30,15 +29,17 @@ def context(tempdir):
 def temp_phy_config_dir(tempdir):
     """Use a temporary phy user directory."""
     import phy.utils.context
+
     f = phy.utils.context.phy_config_dir
     phy.utils.context.phy_config_dir = lambda: tempdir
     yield
     phy.utils.context.phy_config_dir = f
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test utils and cache
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_read_write(tempdir):
     x = np.arange(10)
@@ -63,12 +64,11 @@ def test_context_load_save_pickle(tempdir, context, temp_phy_config_dir):
 
 
 def test_context_cache(context):
-
     _res = []
 
     def f(x):
         _res.append(x)
-        return x ** 2
+        return x**2
 
     x = np.arange(5)
     x2 = x * x
@@ -118,21 +118,20 @@ def test_context_cache_method(tempdir, context):
 
 
 def test_context_memcache(tempdir, context):
-
     _res = []
 
     @context.memcache
     def f(x):
         _res.append(x)
-        return x ** 2
+        return x**2
 
     # Compute the function a first time.
     x = 10
-    ae(f(x), x ** 2)
+    ae(f(x), x**2)
     assert len(_res) == 1
 
     # The second time, the memory cache is used.
-    ae(f(x), x ** 2)
+    ae(f(x), x**2)
     assert len(_res) == 1
 
     # We artificially clear the memory cache.
@@ -141,7 +140,7 @@ def test_context_memcache(tempdir, context):
     context.load_memcache(_fullname(f))
 
     # This time, the result is loaded from disk.
-    ae(f(x), x ** 2)
+    ae(f(x), x**2)
     assert len(_res) == 1
 
 

@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Integration tests for the GUIs."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 from itertools import cycle, islice
 import logging
@@ -18,14 +16,21 @@ import numpy as np
 from pytestqt.plugin import QtBot
 
 from phylib.io.mock import (
-    artificial_features, artificial_traces, artificial_spike_clusters, artificial_spike_samples,
-    artificial_waveforms
+    artificial_features,
+    artificial_traces,
+    artificial_spike_clusters,
+    artificial_spike_samples,
+    artificial_waveforms,
 )
 
 from phylib.utils import connect, unconnect, Bunch, reset, emit
 
 from phy.cluster.views import (
-    WaveformView, FeatureView, AmplitudeView, TraceView, TemplateView,
+    WaveformView,
+    FeatureView,
+    AmplitudeView,
+    TraceView,
+    TemplateView,
 )
 from phy.gui.qt import Debouncer, create_app
 from phy.gui.widgets import Barrier
@@ -35,9 +40,10 @@ from ..base import BaseController, WaveformMixin, FeatureMixin, TraceMixin, Temp
 logger = logging.getLogger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Mock models and controller classes
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class MyModel(object):
     seed = np.random.seed(0)
@@ -54,7 +60,7 @@ class MyModel(object):
     metadata = {'group': {3: 'noise', 4: 'mua', 5: 'good'}}
     sample_rate = 10000
     spike_attributes = {}
-    amplitudes = np.random.normal(size=n_spikes, loc=1, scale=.1)
+    amplitudes = np.random.normal(size=n_spikes, loc=1, scale=0.1)
     spike_clusters = artificial_spike_clusters(n_spikes, n_clusters)
     spike_templates = spike_clusters
     spike_samples = artificial_spike_samples(n_spikes)
@@ -78,7 +84,8 @@ class MyModel(object):
         nc = self.n_channels // 2
         return Bunch(
             template=artificial_waveforms(1, self.n_samples_waveforms, nc)[0, ...],
-            channel_ids=self._get_some_channels(template_id, nc))
+            channel_ids=self._get_some_channels(template_id, nc),
+        )
 
     def save_spike_clusters(self, spike_clusters):
         pass
@@ -99,51 +106,60 @@ class MyController(BaseController):
 
 class MyControllerW(WaveformMixin, MyController):
     """With waveform view."""
+
     pass
 
 
 class MyControllerF(FeatureMixin, MyController):
     """With feature view."""
+
     pass
 
 
 class MyControllerT(TraceMixin, MyController):
     """With trace view."""
+
     pass
 
 
 class MyControllerTmp(TemplateMixin, MyController):
     """With templates."""
+
     pass
 
 
 class MyControllerFull(TemplateMixin, WaveformMixin, FeatureMixin, TraceMixin, MyController):
     """With everything."""
+
     pass
 
 
 def _mock_controller(tempdir, cls):
     model = MyModel()
     return cls(
-        dir_path=tempdir, config_dir=tempdir / 'config', model=model,
-        clear_cache=True, enable_threading=False)
+        dir_path=tempdir,
+        config_dir=tempdir / 'config',
+        model=model,
+        clear_cache=True,
+        enable_threading=False,
+    )
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Base classes
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class MinimalControllerTests(object):
-
     # Methods to override
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     @classmethod
     def get_controller(cls, tempdir):
         raise NotImplementedError()
 
     # Convenient properties
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     @property
     def qtbot(self):
@@ -186,7 +202,7 @@ class MinimalControllerTests(object):
         return self.gui.list_views(AmplitudeView)[0]
 
     # Convenience methods
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def stop(self):  # pragma: no cover
         """Used for debugging."""
@@ -233,7 +249,7 @@ class MinimalControllerTests(object):
         getattr(s.actions, 'move_%s' % w)()
         s.block()
 
-    def lasso(self, view, scale=1.):
+    def lasso(self, view, scale=1.0):
         w, h = view.canvas.get_size()
         w *= scale
         h *= scale
@@ -243,7 +259,7 @@ class MinimalControllerTests(object):
         mouse_click(self.qtbot, view.canvas, (1, h - 1), modifiers=('Control',))
 
     # Fixtures
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     @classmethod
     def setUpClass(cls):
@@ -284,9 +300,8 @@ class MinimalControllerTests(object):
 
 
 class BaseControllerTests(MinimalControllerTests):
-
     # Common test methods
-    #--------------------------------------------------------------------------
+    # --------------------------------------------------------------------------
 
     def test_common_01(self):
         """Select one cluster."""
@@ -366,9 +381,10 @@ class GlobalViewsTests(object):
         emit('table_sort', cv, self.cluster_ids[::-1])
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Mock test cases
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class MockControllerTests(MinimalControllerTests, GlobalViewsTests, unittest.TestCase):
     """Empty mock controller."""
@@ -431,7 +447,7 @@ class MockControllerFTests(MinimalControllerTests, unittest.TestCase):
     def test_feature_view_split(self):
         self.next()
         n = max(self.cluster_ids)
-        self.lasso(self.feature_view, .1)
+        self.lasso(self.feature_view, 0.1)
         self.split()
         # Split one cluster => Two new clusters should be selected after the split.
         self.assertEqual(self.selected[:2], [n + 1, n + 2])
@@ -501,6 +517,7 @@ class MockControllerTmpTests(MinimalControllerTests, unittest.TestCase):
 
 class MockControllerFullTests(MinimalControllerTests, unittest.TestCase):
     """Mock controller with all views."""
+
     @classmethod
     def get_controller(cls, tempdir):
         return _mock_controller(tempdir, MyControllerFull)

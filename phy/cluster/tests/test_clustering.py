@@ -1,27 +1,30 @@
-# -*- coding: utf-8 -*-
-
 """Test clustering."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import numpy as np
 from numpy.testing import assert_array_equal as ae
 from pytest import raises
 
 from phylib.io.mock import artificial_spike_clusters
-from phylib.io.array import (_spikes_in_clusters,)
+from phylib.io.array import (
+    _spikes_in_clusters,
+)
 from phylib.utils import connect
-from ..clustering import (_extend_spikes,
-                          _concatenate_spike_clusters,
-                          _extend_assignment,
-                          Clustering)
+from ..clustering import (
+    _extend_spikes,
+    _concatenate_spike_clusters,
+    _extend_assignment,
+    Clustering,
+)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test assignments
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_extend_spikes_simple():
     spike_clusters = np.array([3, 5, 2, 9, 5, 5, 2])
@@ -62,10 +65,9 @@ def test_extend_spikes():
 
 
 def test_concatenate_spike_clusters():
-    spikes, clusters = _concatenate_spike_clusters(([1, 5, 4],
-                                                    [10, 50, 40]),
-                                                   ([2, 0, 3, 6],
-                                                    [20, 0, 30, 60]))
+    spikes, clusters = _concatenate_spike_clusters(
+        ([1, 5, 4], [10, 50, 40]), ([2, 0, 3, 6], [20, 0, 30, 60])
+    )
     ae(spikes, np.arange(7))
     ae(clusters, np.arange(0, 60 + 1, 10))
 
@@ -82,28 +84,31 @@ def test_extend_assignment():
     # This should not depend on the index chosen.
     for to in (123, 0, 1, 2, 3):
         clusters_rel = [123] * len(spike_ids)
-        new_spike_ids, new_cluster_ids = _extend_assignment(spike_ids,
-                                                            spike_clusters,
-                                                            clusters_rel,
-                                                            10,
-                                                            )
+        new_spike_ids, new_cluster_ids = _extend_assignment(
+            spike_ids,
+            spike_clusters,
+            clusters_rel,
+            10,
+        )
         ae(new_spike_ids, [0, 2, 6])
         ae(new_cluster_ids, [10, 10, 11])
 
     # Second case: we assign the spikes to different clusters.
     clusters_rel = [0, 1]
-    new_spike_ids, new_cluster_ids = _extend_assignment(spike_ids,
-                                                        spike_clusters,
-                                                        clusters_rel,
-                                                        10,
-                                                        )
+    new_spike_ids, new_cluster_ids = _extend_assignment(
+        spike_ids,
+        spike_clusters,
+        clusters_rel,
+        10,
+    )
     ae(new_spike_ids, [0, 2, 6])
     ae(new_cluster_ids, [10, 11, 12])
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test clustering
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_clustering_split():
     spike_clusters = np.array([2, 5, 3, 2, 7, 5, 2])
@@ -115,22 +120,24 @@ def test_clustering_split():
     assert clustering.n_spikes == n_spikes
     ae(clustering.spike_ids, np.arange(n_spikes))
 
-    splits = [[0],
-              [1],
-              [2],
-              [0, 1],
-              [0, 2],
-              [1, 2],
-              [0, 1, 2],
-              [3],
-              [4],
-              [3, 4],
-              [6],
-              [6, 5],
-              [0, 6],
-              [0, 3, 6],
-              [0, 2, 6],
-              np.arange(7)]
+    splits = [
+        [0],
+        [1],
+        [2],
+        [0, 1],
+        [0, 2],
+        [1, 2],
+        [0, 1, 2],
+        [3],
+        [4],
+        [3, 4],
+        [6],
+        [6, 5],
+        [0, 6],
+        [0, 3, 6],
+        [0, 2, 6],
+        np.arange(7),
+    ]
 
     # Test many splits.
     for to_split in splits:

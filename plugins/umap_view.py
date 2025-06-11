@@ -7,11 +7,13 @@ from phy.cluster.views import ScatterView
 def umap(x):
     """Perform the dimension reduction of the array x."""
     from umap import UMAP
+
     return UMAP().fit_transform(x)
 
 
 class WaveformUMAPView(ScatterView):
     """Every view corresponds to a unique view class, so we need to subclass ScatterView."""
+
     pass
 
 

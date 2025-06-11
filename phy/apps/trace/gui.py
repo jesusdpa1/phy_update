@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*-
-
 """Trace GUI."""
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import logging
 
@@ -19,9 +17,10 @@ from phy.gui import create_app, run_app, GUI
 logger = logging.getLogger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Trace GUI
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def create_trace_gui(obj, **kwargs):
     """Create the Trace GUI.
@@ -50,8 +49,10 @@ def create_trace_gui(obj, **kwargs):
         return create_trace_gui(next(iter(params.pop('dat_path'))), **params)
 
     kwargs = {
-        k: v for k, v in kwargs.items()
-        if k in ('sample_rate', 'n_channels_dat', 'dtype', 'offset')}
+        k: v
+        for k, v in kwargs.items()
+        if k in ('sample_rate', 'n_channels_dat', 'dtype', 'offset')
+    }
     traces = get_ephys_reader(obj, **kwargs)
 
     create_app()
@@ -59,9 +60,7 @@ def create_trace_gui(obj, **kwargs):
     gui.set_default_actions()
 
     def _get_traces(interval):
-        return Bunch(
-            data=select_traces(
-                traces, interval, sample_rate=traces.sample_rate))
+        return Bunch(data=select_traces(traces, interval, sample_rate=traces.sample_rate))
 
     # TODO: load channel information
 

@@ -2,8 +2,7 @@
 # Copyright (c) 2009-2016 Nicolas P. Rougier. All rights reserved.
 # Distributed under the (new) BSD License.
 # -----------------------------------------------------------------------------
-"""
-"""
+""" """
 
 from functools import reduce
 from operator import mul
@@ -93,14 +92,13 @@ class Uniforms(Texture2D):
     """
 
     def __init__(self, size, dtype):
-        """ Initialization """
+        """Initialization"""
 
         # Check dtype is made of float32 only
         dtype = eval(str(np.dtype(dtype)))
         rtype = dtype_reduce(dtype)
         if type(rtype[0]) is not str or rtype[2] != 'float32':
-            raise RuntimeError(
-                "Uniform type cannot be reduced to float32 only")
+            raise RuntimeError('Uniform type cannot be reduced to float32 only')
 
         # True dtype (the one given in args)
         self._original_dtype = np.dtype(dtype)
@@ -131,36 +129,37 @@ class Uniforms(Texture2D):
         if size % cols:
             rows += 1
 
-        Texture2D.__init__(self, shape=(rows, cols, 4), dtype=np.float32,
-                           resizeable=False, store=True)
+        Texture2D.__init__(
+            self, shape=(rows, cols, 4), dtype=np.float32, resizeable=False, store=True
+        )
         data = self._data.ravel()
         self._typed_data = data.view(self._complete_dtype)
         self._size = size
 
     def __setitem__(self, key, value):
-        """ x.__getitem__(y) <==> x[y] """
+        """x.__getitem__(y) <==> x[y]"""
 
         if self.base is not None and not self._valid:
-            raise ValueError("This uniforms view has been invalited")
+            raise ValueError('This uniforms view has been invalited')
 
         size = self._size
         if isinstance(key, int):
             if key < 0:
                 key += size
             if key < 0 or key > size:
-                raise IndexError("Uniforms assignment index out of range")
+                raise IndexError('Uniforms assignment index out of range')
             start, stop = key, key + 1
         elif isinstance(key, slice):
             start, stop, step = key.indices(size)
             if step != 1:
-                raise ValueError("Cannot access non-contiguous uniforms data")
+                raise ValueError('Cannot access non-contiguous uniforms data')
             if stop < start:
                 start, stop = stop, start
         elif key == Ellipsis:
             start = 0
             stop = size
         else:
-            raise TypeError("Uniforms indices must be integers")
+            raise TypeError('Uniforms indices must be integers')
 
         # First we set item using the typed data
         # shape = self._typed_data[start:stop].shape
@@ -181,10 +180,10 @@ class Uniforms(Texture2D):
             stop = stop[0], self.shape[1] - 1
 
         offset = start[0], start[1], 0
-        data = self._data[start[0]:stop[0] + 1, start[1]:stop[1]]
+        data = self._data[start[0] : stop[0] + 1, start[1] : stop[1]]
         self.set_data(data=data, offset=offset, copy=False)
 
-    def code(self, prefix="u_"):
+    def code(self, prefix='u_'):
         """
         Generate the GLSL code needed to retrieve fake uniform values from a texture.
         The generated uniform names can be prefixed with the given prefix.
@@ -196,10 +195,9 @@ class Uniforms(Texture2D):
         header = """uniform sampler2D u_uniforms;\n"""
 
         # Header generation (easy)
-        types = {1: 'float', 2: 'vec2 ', 3: 'vec3 ',
-                 4: 'vec4 ', 9: 'mat3 ', 16: 'mat4 '}
+        types = {1: 'float', 2: 'vec2 ', 3: 'vec3 ', 4: 'vec4 ', 9: 'mat3 ', 16: 'mat4 '}
         for name, count, _ in _dtype:
-            header += "varying %s %s%s;\n" % (types[count], prefix, name)
+            header += 'varying %s %s%s;\n' % (types[count], prefix, name)
 
         # Body generation (not so easy)
         rows, cols = self.shape[0], self.shape[1]
@@ -226,28 +224,27 @@ class Uniforms(Texture2D):
             count, shift = _dtype[name], 0
             while count:
                 if store == 0:
-                    body += "\n    _uniform = texture2D(u_uniforms, vec2(float(i++)/size_x,ty));\n"
+                    body += '\n    _uniform = texture2D(u_uniforms, vec2(float(i++)/size_x,ty));\n'
                     store = 4
                 if store == 4:
-                    a = "xyzw"
+                    a = 'xyzw'
                 elif store == 3:
-                    a = "yzw"
+                    a = 'yzw'
                 elif store == 2:
-                    a = "zw"
+                    a = 'zw'
                 elif store == 1:
-                    a = "w"
+                    a = 'w'
                 if shift == 0:
-                    b = "xyzw"
+                    b = 'xyzw'
                 elif shift == 1:
-                    b = "yzw"
+                    b = 'yzw'
                 elif shift == 2:
-                    b = "zw"
+                    b = 'zw'
                 elif shift == 3:
-                    b = "w"
+                    b = 'w'
 
                 i = min(min(len(b), count), len(a))
-                body += "    %s%s.%s = _uniforms.%s;\n" % (
-                    prefix, name, b[:i], a[:i])
+                body += '    %s%s.%s = _uniforms.%s;\n' % (prefix, name, b[:i], a[:i])
                 count -= i
                 shift += i
                 store -= i

@@ -1,25 +1,30 @@
-# -*- coding: utf-8 -*-
-
 """Test dock."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 from functools import partial
 
 from pytest import raises
 
 from ..actions import (
-    _show_shortcuts, _show_snippets, _get_shortcut_string, _get_qkeysequence, _parse_snippet,
-    _expected_args, Actions)
+    _show_shortcuts,
+    _show_snippets,
+    _get_shortcut_string,
+    _get_qkeysequence,
+    _parse_snippet,
+    _expected_args,
+    Actions,
+)
 from phylib.utils.testing import captured_output, captured_logging
 from ..qt import mock_dialogs
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test actions
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_expected_args():
     assert _expected_args(lambda: 0) == ()
@@ -79,7 +84,6 @@ def test_actions_default_shortcuts(gui):
 
 
 def test_actions_simple(actions):
-
     _res = []
 
     def _action(*args):
@@ -113,16 +117,17 @@ def test_actions_simple(actions):
     assert '<Actions' in actions.__repr__()
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test actions and snippet
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_actions_gui_menu(qtbot, gui, actions):
     qtbot.addWidget(gui)
 
     @actions.add(shortcut='g', menu='&File', icon='f0c7', toolbar=True)
     def press():
-        print("press")
+        print('press')
 
     actions.separator(menu='&File')
 
@@ -195,10 +200,9 @@ def test_actions_checkable(qtbot, gui, actions):
 
 
 def test_actions_dialog_1(qtbot, gui, actions):
-
     @actions.add(shortcut='a', prompt=True)
     def hello(arg):
-        print("hello", arg)
+        print('hello', arg)
 
     qtbot.addWidget(gui)
     gui.show()
@@ -212,10 +216,9 @@ def test_actions_dialog_1(qtbot, gui, actions):
 
 
 def test_actions_dialog_2(qtbot, gui, actions):
-
     @actions.add(shortcut='a', prompt=True)
     def hello(arg1, arg2):
-        print("hello", arg1, arg2)
+        print('hello', arg1, arg2)
 
     qtbot.addWidget(gui)
     gui.show()
@@ -290,9 +293,10 @@ def test_snippets_gui(qtbot, gui, actions):
     assert _actions == [([3, 4, 5], ['ab', 'c'])]
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Test snippets
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def test_snippets_parse():
     def _check(args, expected):
@@ -307,17 +311,17 @@ def test_snippets_parse():
     _check('1', [1])
     _check('10', [10])
 
-    _check('1.', [1.])
-    _check('10.', [10.])
+    _check('1.', [1.0])
+    _check('10.', [10.0])
     _check('10.0', [10.0])
 
     _check('0 1', [0, 1])
-    _check('0 1.', [0, 1.])
-    _check('0 1.0', [0, 1.])
+    _check('0 1.', [0, 1.0])
+    _check('0 1.0', [0, 1.0])
 
     _check('0,1', [[0, 1]])
-    _check('0,10.', [[0, 10.]])
-    _check('0. 1,10.', [0., [1, 10.]])
+    _check('0,10.', [[0, 10.0]])
+    _check('0. 1,10.', [0.0, [1, 10.0]])
 
     _check('2-7', [[2, 3, 4, 5, 6, 7]])
     _check('2 3-5', [2, [3, 4, 5]])
@@ -326,7 +330,6 @@ def test_snippets_parse():
 
 
 def test_snippets_errors(actions, snippets):
-
     _actions = []
 
     @actions.add(name='my_test', alias='t')
@@ -338,7 +341,7 @@ def test_snippets_errors(actions, snippets):
     logging_name = 'phy.gui.actions'
     with captured_logging(logging_name) as buf:
         snippets.run(':t1')
-    assert 'couldn\'t' in buf.getvalue().lower()
+    assert "couldn't" in buf.getvalue().lower()
 
     with captured_logging(logging_name) as buf:
         snippets.run(':t')
@@ -357,7 +360,6 @@ def test_snippets_errors(actions, snippets):
 
 
 def test_snippets_actions_1(actions, snippets):
-
     _actions = []
 
     @actions.add(name='my_test_1')
@@ -402,7 +404,6 @@ def test_snippets_actions_1(actions, snippets):
 
 
 def test_snippets_actions_2(actions, snippets):
-
     _actions = []
 
     @actions.add

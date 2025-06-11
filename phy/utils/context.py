@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Execution context that handles parallel processing and caching."""
 
 # ------------------------------------------------------------------------------
@@ -97,16 +95,12 @@ class Context(object):
         try:
             from joblib import Memory
 
-            self._memory = Memory(
-                location=self.cache_dir, mmap_mode=None, verbose=self.verbose
-            )
+            self._memory = Memory(location=self.cache_dir, mmap_mode=None, verbose=self.verbose)
             logger.debug('Initialize joblib cache dir at `%s`.', self.cache_dir)
             logger.debug('Reducing the size of the cache if needed.')
             self._memory.reduce_size()
         except ImportError:  # pragma: no cover
-            logger.warning(
-                'Joblib is not installed. Install it with `conda install joblib`.'
-            )
+            logger.warning('Joblib is not installed. Install it with `conda install joblib`.')
             self._memory = None
 
     def cache(self, f):

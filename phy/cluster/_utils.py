@@ -1,10 +1,8 @@
-# -*- coding: utf-8 -*-
-
 """Clustering utility functions."""
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import numpy as np
 
@@ -17,9 +15,10 @@ from phylib.utils import Bunch, _as_list, _is_list, emit, silent
 logger = logging.getLogger(__name__)
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Utility functions
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 def _update_cluster_selection(clusters, up):
     clusters = list(clusters)
@@ -45,9 +44,10 @@ def create_cluster_meta(cluster_groups):
     return meta
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # UpdateInfo class
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class UpdateInfo(Bunch):
     """Object created every time the dataset is modified via a clustering or cluster metadata
@@ -79,6 +79,7 @@ class UpdateInfo(Bunch):
         when redoing the undone action.
 
     """
+
     def __init__(self, **kwargs):
         d = dict(
             description='',
@@ -104,22 +105,22 @@ class UpdateInfo(Bunch):
             return '<UpdateInfo>'
         elif desc in ('merge', 'assign'):
             a, d = _join(self.added), _join(self.deleted)
-            return '<{desc}{h} {d} => {a}>'.format(
-                desc=desc, a=a, d=d, h=h)
+            return '<{desc}{h} {d} => {a}>'.format(desc=desc, a=a, d=d, h=h)
         elif desc.startswith('metadata'):
             c = _join(self.metadata_changed)
             m = self.metadata_value
-            return '<{desc}{h} {c} => {m}>'.format(
-                desc=desc, c=c, m=m, h=h)
+            return '<{desc}{h} {c} => {m}>'.format(desc=desc, c=c, m=m, h=h)
         return '<UpdateInfo>'
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # ClusterMetadataUpdater class
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
+
 
 class ClusterMeta(object):
     """Handle cluster metadata changes."""
+
     def __init__(self):
         self._fields = {}
         self._reset_data()
@@ -147,7 +148,7 @@ class ClusterMeta(object):
 
     def from_dict(self, dic):
         """Import data from a `{cluster_id: {field: value}}` dictionary."""
-        #self._reset_data()
+        # self._reset_data()
         # Do not raise events here.
         with silent():
             for cluster, vals in dic.items():
@@ -192,10 +193,11 @@ class ClusterMeta(object):
                 self._data[cluster] = {}
             self._data[cluster][field] = value
 
-        up = UpdateInfo(description='metadata_' + field,
-                        metadata_changed=clusters,
-                        metadata_value=value,
-                        )
+        up = UpdateInfo(
+            description='metadata_' + field,
+            metadata_changed=clusters,
+            metadata_value=value,
+        )
         undo_state = emit('request_undo_state', self, up)
 
         if add_to_stack:
@@ -305,8 +307,10 @@ class ClusterMeta(object):
 # Property cycle
 # -----------------------------------------------------------------------------
 
+
 class RotatingProperty(object):
     """A key-value property of a view that can switch between several predefined values."""
+
     def __init__(self):
         self._choices = {}
         self._current = None

@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Qt utilities."""
 
 # -----------------------------------------------------------------------------
@@ -30,33 +28,73 @@ logger = logging.getLogger(__name__)
 # https://riverbankcomputing.com/pipermail/pyqt/2014-January/033681.html
 from OpenGL import GL  # noqa
 
-from PyQt5.QtCore import (Qt, QByteArray, QMetaObject, QObject,  # noqa
-                          QVariant, QEventLoop, QTimer, QPoint, QTimer,
-                          QThreadPool, QRunnable,
-                          pyqtSignal, pyqtSlot, QSize, QUrl,
-                          QEvent, QCoreApplication,
-                          qInstallMessageHandler,
-                          )
+from PyQt5.QtCore import (
+    Qt,
+    QByteArray,
+    QMetaObject,
+    QObject,  # noqa
+    QVariant,
+    QEventLoop,
+    QTimer,
+    QPoint,
+    QTimer,
+    QThreadPool,
+    QRunnable,
+    pyqtSignal,
+    pyqtSlot,
+    QSize,
+    QUrl,
+    QEvent,
+    QCoreApplication,
+    qInstallMessageHandler,
+)
 from PyQt5.QtGui import (  # noqa
-    QKeySequence, QIcon, QColor, QMouseEvent, QGuiApplication,
-    QFontDatabase, QWindow, QOpenGLWindow)
-from PyQt5.QtWebEngineWidgets import (QWebEngineView,  # noqa
-                                      QWebEnginePage,
-                                      # QWebSettings,
-                                      )
+    QKeySequence,
+    QIcon,
+    QColor,
+    QMouseEvent,
+    QGuiApplication,
+    QFontDatabase,
+    QWindow,
+    QOpenGLWindow,
+)
+from PyQt5.QtWebEngineWidgets import (
+    QWebEngineView,  # noqa
+    QWebEnginePage,
+    # QWebSettings,
+)
 from PyQt5.QtWebChannel import QWebChannel  # noqa
-from PyQt5.QtWidgets import (# noqa
-    QAction, QStatusBar, QMainWindow, QDockWidget, QToolBar,
-    QWidget, QHBoxLayout, QVBoxLayout, QGridLayout, QScrollArea,
-    QPushButton, QLabel, QCheckBox, QPlainTextEdit,
-    QLineEdit, QSlider, QSpinBox, QDoubleSpinBox,
-    QMessageBox, QApplication, QMenu, QMenuBar,
-    QInputDialog, QOpenGLWidget)
+from PyQt5.QtWidgets import (  # noqa
+    QAction,
+    QStatusBar,
+    QMainWindow,
+    QDockWidget,
+    QToolBar,
+    QWidget,
+    QHBoxLayout,
+    QVBoxLayout,
+    QGridLayout,
+    QScrollArea,
+    QPushButton,
+    QLabel,
+    QCheckBox,
+    QPlainTextEdit,
+    QLineEdit,
+    QSlider,
+    QSpinBox,
+    QDoubleSpinBox,
+    QMessageBox,
+    QApplication,
+    QMenu,
+    QMenuBar,
+    QInputDialog,
+    QOpenGLWidget,
+)
 
 # Enable high DPI support.
 # BUG: uncommenting this create scaling bugs on high DPI screens
 # on Ubuntu.
-#QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
+# QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
 
 
 # -----------------------------------------------------------------------------
@@ -68,11 +106,13 @@ _MOCK = None
 
 def mockable(f):
     """Wrap interactive Qt functions that should be mockable in the testing suite."""
+
     @wraps(f)
     def wrapped(*args, **kwargs):
         if _MOCK is not None:
             return _MOCK
         return f(*args, **kwargs)
+
     return wrapped
 
 
@@ -115,12 +155,14 @@ def require_qt(func):
     the case.
 
     """
+
     @wraps(func)
     def wrapped(*args, **kwargs):
         if not QApplication.instance():  # pragma: no cover
-            logger.warning("Creating a Qt application.")
+            logger.warning('Creating a Qt application.')
             create_app()
         return func(*args, **kwargs)
+
     return wrapped
 
 
@@ -134,6 +176,7 @@ def run_app():  # pragma: no cover
 # -----------------------------------------------------------------------------
 # Internal utility functions
 # -----------------------------------------------------------------------------
+
 
 @mockable
 def _button_enum_from_name(name):
@@ -174,19 +217,19 @@ def _block(until_true, timeout=None):
 
     while not until_true() and (default_timer() - t0 < timeout):
         app = QApplication.instance()
-        app.processEvents(QEventLoop.AllEvents,
-                          int(timeout * 1000))
+        app.processEvents(QEventLoop.AllEvents, int(timeout * 1000))
     if not until_true():
-        logger.error("Timeout in _block().")
+        logger.error('Timeout in _block().')
         # NOTE: make sure we remove any busy cursor.
         app.restoreOverrideCursor()
         app.restoreOverrideCursor()
-        raise RuntimeError("Timeout in _block().")
+        raise RuntimeError('Timeout in _block().')
 
 
 def _wait(ms):
     """Wait for a given number of milliseconds, without blocking the GUI."""
     from PyQt5 import QtTest
+
     QtTest.QTest.qWait(ms)
 
 
@@ -194,6 +237,7 @@ def _debug_trace():  # pragma: no cover
     """Set a tracepoint in the Python debugger that works with Qt."""
     from PyQt5.QtCore import pyqtRemoveInputHook
     from pdb import set_trace
+
     pyqtRemoveInputHook()
     set_trace()
 
@@ -217,6 +261,7 @@ def _load_font(name, size=8):
 # Public functions
 # -----------------------------------------------------------------------------
 
+
 @mockable
 def prompt(message, buttons=('yes', 'no'), title='Question'):
     """Display a dialog with several buttons to confirm or cancel an action.
@@ -235,7 +280,7 @@ def prompt(message, buttons=('yes', 'no'), title='Question'):
     """
     buttons = [(button, _button_enum_from_name(button)) for button in buttons]
     arg_buttons = 0
-    for (_, button) in buttons:
+    for _, button in buttons:
         arg_buttons |= button
     box = QMessageBox()
     box.setWindowTitle(title)
@@ -262,6 +307,7 @@ def message_box(message, title='Message', level=None):  # pragma: no cover
 
 class QtDialogLogger(logging.Handler):
     """Display a message box for all errors."""
+
     def emit(self, record):  # pragma: no cover
         msg = self.format(record)
         message_box(msg, title='An error has occurred', level='critical')
@@ -315,6 +361,7 @@ def busy_cursor(activate=True):
 def screenshot_default_path(widget, dir=None):
     """Return a default path for the screenshot of a widget."""
     from phylib.utils._misc import phy_config_dir
+
     date = datetime.now().strftime('%Y%m%d%H%M%S')
     name = 'phy_screenshot_%s_%s.png' % (date, widget.__class__.__name__)
     path = (Path(dir) if dir else phy_config_dir() / 'screenshots') / name
@@ -344,7 +391,7 @@ def screenshot(widget, path=None, dir=None):
     else:
         # Generic call for regular Qt widgets.
         widget.grab().save(str(path))
-    logger.info("Saved screenshot to %s.", path)
+    logger.info('Saved screenshot to %s.', path)
     return path
 
 
@@ -378,33 +425,36 @@ def _get_icon(icon, size=64, color='black'):
 
     if not op.exists(output_path):  # pragma: no cover
         # Ideally, this should only run on the developer's machine.
-        logger.debug("Saving icon `%s` using the PIL library.", output_path)
+        logger.debug('Saving icon `%s` using the PIL library.', output_path)
         from PIL import Image, ImageDraw, ImageFont
+
         org_size = size
         size = max(150, size)
 
-        image = Image.new("RGBA", (size, size), color=(0, 0, 0, 0))
+        image = Image.new('RGBA', (size, size), color=(0, 0, 0, 0))
         draw = ImageDraw.Draw(image)
 
         font = ImageFont.truetype(ttf_file, int(size))
         width, height = draw.textsize(hex_icon, font=font)
 
         draw.text(
-            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=color)
+            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=color
+        )
 
         # Get bounding box
         bbox = image.getbbox()
 
         # Create an alpha mask
-        image_mask = Image.new("L", (size, size), 0)
+        image_mask = Image.new('L', (size, size), 0)
         draw_mask = ImageDraw.Draw(image_mask)
 
         # Draw the icon on the mask
         draw_mask.text(
-            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=255)
+            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=255
+        )
 
         # Create a solid color image and apply the mask
-        icon_image = Image.new("RGBA", (size, size), color)
+        icon_image = Image.new('RGBA', (size, size), color)
         icon_image.putalpha(image_mask)
 
         if bbox:
@@ -414,7 +464,7 @@ def _get_icon(icon, size=64, color='black'):
         border_h = int((size - (bbox[3] - bbox[1])) / 2)
 
         # Create output image
-        out_image = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        out_image = Image.new('RGBA', (size, size), (0, 0, 0, 0))
         out_image.paste(icon_image, (border_w, border_h))
 
         # If necessary, scale the image to the target size
@@ -433,6 +483,7 @@ def _get_icon(icon, size=64, color='black'):
 # Widgets
 # -----------------------------------------------------------------------------
 
+
 def _static_abs_path(rel_path):
     """Return the absolute path of a static file saved in this repository."""
     return Path(__file__).parent / 'static' / rel_path
@@ -440,11 +491,12 @@ def _static_abs_path(rel_path):
 
 class WebPage(QWebEnginePage):
     """A Qt web page widget."""
+
     _raise_on_javascript_error = False
 
     def javaScriptConsoleMessage(self, level, msg, line, source):
         super(WebPage, self).javaScriptConsoleMessage(level, msg, line, source)
-        msg = "[JS:L%02d] %s" % (line, msg)
+        msg = '[JS:L%02d] %s' % (line, msg)
         f = (partial(logger.log, 5), logger.warning, logger.error)[level]
         if self._raise_on_javascript_error and level >= 2:
             raise RuntimeError(msg)
@@ -497,8 +549,10 @@ class WebView(QWebEngineView):
 # Threading
 # -----------------------------------------------------------------------------
 
+
 class WorkerSignals(QObject):
     """Object holding some signals for the workers."""
+
     finished = pyqtSignal()
     error = pyqtSignal(tuple)
     result = pyqtSignal(object)
@@ -530,6 +584,7 @@ class Worker(QRunnable):
     **kwargs : function keyword arguments
 
     """
+
     def __init__(self, fn, *args, **kwargs):
         super(Worker, self).__init__()
         self.fn = fn
@@ -600,12 +655,12 @@ class Debouncer(object):
     def _elapsed_enough(self):
         """Return whether the elapsed time since the last submission is greater
         than the threshold."""
-        return default_timer() - self._last_submission_time > self.delay * .001
+        return default_timer() - self._last_submission_time > self.delay * 0.001
 
     def _timer_callback(self):
         """Callback for the timer."""
         if self._elapsed_enough():
-            logger.log(self._log_level, "Stop waiting and triggering.")
+            logger.log(self._log_level, 'Stop waiting and triggering.')
             self._timer.stop()
             self.trigger()
 
@@ -614,12 +669,12 @@ class Debouncer(object):
         is higher than the threshold, or wait until executing it otherwiser."""
         self.pending_functions[key] = (f, args, kwargs)
         if self._elapsed_enough():
-            logger.log(self._log_level, "Triggering action immediately.")
+            logger.log(self._log_level, 'Triggering action immediately.')
             # Trigger the action immediately if the delay since the last submission is greater
             # than the threshold.
             self.trigger()
         else:
-            logger.log(self._log_level, "Waiting...")
+            logger.log(self._log_level, 'Waiting...')
             # Otherwise, we start the timer.
             if not self._timer.isActive():
                 self._timer.start(25)
@@ -631,18 +686,19 @@ class Debouncer(object):
             if item is None:
                 continue
             f, args, kwargs = item
-            logger.log(self._log_level, "Trigger %s.", f.__name__)
+            logger.log(self._log_level, 'Trigger %s.', f.__name__)
             f(*args, **kwargs)
             self.pending_functions[key] = None
 
-    def stop_waiting(self, delay=.1):
+    def stop_waiting(self, delay=0.1):
         """Stop waiting and force the pending actions to execute (almost) immediately."""
         # The trigger will occur in `delay` seconds.
-        self._last_submission_time = default_timer() - (self.delay * .001 - delay)
+        self._last_submission_time = default_timer() - (self.delay * 0.001 - delay)
 
 
 class AsyncCaller(object):
     """Call a Python function after a delay."""
+
     def __init__(self, delay=10):
         self._delay = delay
         self._timer = None

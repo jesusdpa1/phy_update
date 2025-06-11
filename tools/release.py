@@ -1,12 +1,11 @@
-# -*- coding: utf-8 -*-
 from __future__ import print_function
 
 """Automatic release tools."""
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Imports
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 
 import sys
 import os
@@ -20,6 +19,7 @@ from github3 import login
 # -----------------------------------------------------------------------------
 # Utilities
 # -----------------------------------------------------------------------------
+
 
 def _call(cmd, system=False):
     if system:
@@ -91,6 +91,7 @@ def _set_final_version():
 # Git[hub] tools
 # -----------------------------------------------------------------------------
 
+
 def _create_gh_release():
     version = _get_stable_version()
     name = 'Version {}'.format(version)
@@ -102,24 +103,25 @@ def _create_gh_release():
     gh = login(user, pwd)
     phy = gh.repository('kwikteam', 'phy')
 
-    if input("About to create a GitHub release: are you sure?") != 'yes':
+    if input('About to create a GitHub release: are you sure?') != 'yes':
         return
-    release = phy.create_release('v' + version,
-                                 name=name,
-                                 # draft=False,
-                                 # prerelease=False,
-                                 )
+    release = phy.create_release(
+        'v' + version,
+        name=name,
+        # draft=False,
+        # prerelease=False,
+    )
 
     release.upload_asset('application/zip', op.basename(path), path)
 
 
 def _git_commit(message, push=False):
     assert message
-    if input("About to git commit {}: are you sure?") != 'yes':
+    if input('About to git commit {}: are you sure?') != 'yes':
         return
     _call('git commit -am "{}"'.format(message))
     if push:
-        if input("About to git push upstream master: are you sure?") != 'yes':
+        if input('About to git push upstream master: are you sure?') != 'yes':
             return
         _call('git push upstream master')
 
@@ -127,6 +129,7 @@ def _git_commit(message, push=False):
 # -----------------------------------------------------------------------------
 # PyPI
 # -----------------------------------------------------------------------------
+
 
 def _upload_pypi():
     _call('python setup.py sdist --formats=zip upload')
@@ -136,22 +139,26 @@ def _upload_pypi():
 # Docker
 # -----------------------------------------------------------------------------
 
+
 def _build_docker():
     _call('docker build -t phy-release-test docker/stable')
 
 
 def _test_docker():
-    _call('docker run --rm phy-release-test /sbin/start-stop-daemon --start '
-          '--quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile '
-          '--background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 '
-          '-ac +extension GLX +render && '
-          'python -c "import phy; phy.test()"',
-          system=True)
+    _call(
+        'docker run --rm phy-release-test /sbin/start-stop-daemon --start '
+        '--quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile '
+        '--background --exec /usr/bin/Xvfb -- :99 -screen 0 1400x900x24 '
+        '-ac +extension GLX +render && '
+        'python -c "import phy; phy.test()"',
+        system=True,
+    )
 
 
 # -----------------------------------------------------------------------------
 # Release functions
 # -----------------------------------------------------------------------------
+
 
 def release_test():
     _increment_dev_version()
@@ -164,7 +171,7 @@ def release():
     version = _get_stable_version()
     _set_final_version()
     _upload_pypi()
-    _git_commit("Release {}.".format(version), push=True)
+    _git_commit('Release {}.'.format(version), push=True)
     _create_gh_release()
 
 
