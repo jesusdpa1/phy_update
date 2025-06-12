@@ -27,12 +27,18 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y xvfb herbstluftwm
+        sudo apt-get install -y xvfb herbstluftwm x11-utils xterm
+        # Start Xvfb
         export DISPLAY=:99.0
-        Xvfb :99 -screen 0 1400x900x24 -ac +extension GLX +render &
+        Xvfb :99 -screen 0 1400x900x24 -ac +extension GLX +render -noreset &
         sleep 3
-        herbstluftwm &
-        sleep 1
+        # Verify display is working
+        xdpyinfo -display :99.0 >/dev/null 2>&1 || (echo "Display setup failed" && exit 1)
+        # Start window manager in background
+        DISPLAY=:99.0 herbstluftwm &
+        sleep 2
+        # Verify window manager is running
+        DISPLAY=:99.0 herbstclient version >/dev/null 2>&1 || echo "Window manager setup warning (non-critical)"
       env:
         DISPLAY: :99.0
 
@@ -59,6 +65,8 @@ jobs:
       env:
         DISPLAY: :99.0
         QT_QPA_PLATFORM: offscreen
+        QT_DEBUG_PLUGINS: 0
+        QT_LOGGING_RULES: "*.debug=false"
 
     - name: Test with pytest (Windows/macOS)
       if: runner.os != 'Linux'
