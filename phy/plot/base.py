@@ -483,9 +483,21 @@ _SUPPORTED_KEYS = (
 
 
 def mouse_info(e):
-    """Extract the position and button of a Qt mouse event."""
-    p = e.pos()
-    x, y = p.x(), p.y()
+    """Extract the position and button of a Qt mouse event with Qt5/Qt6 compatibility.
+
+    Returns integer coordinates for consistent polygon drawing behavior.
+    """
+    # Handle position - Qt6 uses position(), Qt5 uses pos()
+    if hasattr(e, 'position'):
+        # Qt6 - returns QPointF (floating point), convert to integers
+        p = e.position()
+        x, y = round(p.x()), round(p.y())  # Round to nearest integers
+    else:
+        # Qt5 - returns QPoint (integer) directly
+        p = e.pos()
+        x, y = p.x(), p.y()
+
+    # Get button info
     b = e.button()
     return (x, y), _BUTTON_MAP.get(b)
 
@@ -532,7 +544,7 @@ class BaseCanvas(QOpenGLWindow):
     """Base canvas class. Derive from QOpenGLWindow.
 
     The canvas represents an OpenGL-powered rectangular black window where one can add visuals
-    and attach interaction (pan/zoom, lasso) and layout (subplot) compaion objects.
+    and attach interaction (pan/zoom, lasso) and layout (subplot) companion objects.
 
     """
 
@@ -799,11 +811,21 @@ class BaseCanvas(QOpenGLWindow):
         self._last_mouse_pos = pos
 
     def wheelEvent(self, e):  # pragma: no cover
-        """Emit an internal `mouse_wheel` event."""
+        """Emit an internal `mouse_wheel` event with Qt5/Qt6 compatibility."""
         # NOTE: Qt has no way to simulate wheel events for testing
         delta = e.angleDelta()
         deltay = (delta.y() or delta.x()) / 120.0
-        pos = e.pos().x(), e.pos().y()
+
+        # Handle position with Qt5/Qt6 compatibility, convert to integers
+        if hasattr(e, 'position'):
+            # Qt6 - returns QPointF, convert to integers
+            p = e.position()
+            pos = (round(p.x()), round(p.y()))
+        else:
+            # Qt5 - returns QPoint, already integers
+            p = e.pos()
+            pos = (p.x(), p.y())
+
         modifiers = get_modifiers(e)
         self.emit('mouse_wheel', pos=pos, delta=deltay, modifiers=modifiers)
 
@@ -825,7 +847,7 @@ class BaseCanvas(QOpenGLWindow):
         self._current_key_event = None
 
     def event(self, e):  # pragma: no cover
-        """Touch event."""
+        """Touch event with Qt5/Qt6 compatibility and integer conversion."""
         out = super().event(e)
         t = e.type()
         # Two-finger pinch.
@@ -836,7 +858,9 @@ class BaseCanvas(QOpenGLWindow):
         elif t == QEvent.Gesture:
             gesture = e.gesture(Qt.PinchGesture)
             if gesture:
-                (x, y) = gesture.centerPoint().x(), gesture.centerPoint().y()
+                center = gesture.centerPoint()
+                # Convert to integers for consistency
+                (x, y) = round(center.x()), round(center.y())
                 scale = gesture.scaleFactor()
                 last_scale = gesture.lastScaleFactor()
                 rotation = gesture.rotationAngle()
@@ -850,14 +874,35 @@ class BaseCanvas(QOpenGLWindow):
         # General touch event.
         elif t == QEvent.TouchUpdate:
             points = e.touchPoints()
-            # These variables are lists of (x, y) coordinates.
-            pos, last_pos = zip(
-                *[
-                    ((p.pos().x(), p.pos.y()), (p.lastPos().x(), p.lastPos.y()))
-                    for p in points
-                ]
-            )
-            self.emit('touch', pos=pos, last_pos=last_pos)
+            # Convert all touch points to integers for consistency
+            pos_list = []
+            last_pos_list = []
+
+            for p in points:
+                # Current position - convert to integers
+                if hasattr(p, 'position'):
+                    # Qt6
+                    curr_pos = p.position()
+                    curr_x, curr_y = round(curr_pos.x()), round(curr_pos.y())
+                else:
+                    # Qt5
+                    curr_pos = p.pos()
+                    curr_x, curr_y = curr_pos.x(), curr_pos.y()
+
+                # Last position - convert to integers
+                if hasattr(p, 'lastPosition'):
+                    # Qt6
+                    last_pos = p.lastPosition()
+                    last_x, last_y = round(last_pos.x()), round(last_pos.y())
+                else:
+                    # Qt5
+                    last_pos = p.lastPos()
+                    last_x, last_y = last_pos.x(), last_pos.y()
+
+                pos_list.append((curr_x, curr_y))
+                last_pos_list.append((last_x, last_y))
+
+            self.emit('touch', pos=pos_list, last_pos=last_pos_list)
         return out
 
     def update(self):

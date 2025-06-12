@@ -1,5 +1,4 @@
-"""Qt dock window."""
-
+"""Qt dock window with Qt5/Qt6 compatibility."""
 
 # -----------------------------------------------------------------------------
 # Imports
@@ -31,6 +30,8 @@ from .qt import (
     QWidget,
     _load_font,
     _wait,
+    get_matplotlib_canvas,
+    is_qt6,
     prompt,
     show_box,
 )
@@ -48,8 +49,12 @@ logger = logging.getLogger(__name__)
 def _try_get_matplotlib_canvas(view):
     """Get the Qt widget from a matplotlib figure."""
     try:
-        from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
         from matplotlib.pyplot import Figure
+
+        # Use compatibility layer to get the right canvas class
+        FigureCanvasQTAgg = get_matplotlib_canvas()
+        if FigureCanvasQTAgg is None:
+            return view
 
         if isinstance(view, Figure):
             view = FigureCanvasQTAgg(view)
@@ -254,7 +259,9 @@ class DockWidget(QDockWidget):
         name = name or getattr(callback, '__name__', None) or text
         assert name
         checkbox = QCheckBox(text)
-        checkbox.setLayoutDirection(2)
+
+        # Use compatibility layer for layout direction
+        checkbox.setLayoutDirection(Qt.RightToLeft)
         checkbox.setToolTip(name)
         if checked:
             checkbox.setCheckState(Qt.Checked if checked else Qt.Unchecked)
@@ -262,7 +269,7 @@ class DockWidget(QDockWidget):
 
             @checkbox.stateChanged.connect
             def on_state_changed(state):
-                return callback(state == Qt.Checked)
+                return callback(Qt.is_checked(state))
 
         assert name not in self._dock_widgets
         self._dock_widgets[name] = checkbox
@@ -290,7 +297,8 @@ class DockWidget(QDockWidget):
         """Create the default buttons on the right."""
 
         # Only show the close button if the dock widget is closable.
-        if int(self.features()) % 2 == 1:
+        # Use compatibility layer for feature checking
+        if Qt.check_dock_feature(self.features(), Qt.DockWidgetClosable):
             # Close button.
             @self.add_button(name='close', text='✕')
             def on_close(e):  # pragma: no cover
@@ -322,7 +330,8 @@ class DockWidget(QDockWidget):
             button = self._dock_widgets['view_menu']
             x = _widget_position(button).x()
             y = _widget_position(self._widget).y()
-            self._menu.exec(QPoint(x, y))
+            # Use compatibility layer for menu execution
+            Qt.exec_menu(self._menu, QPoint(x, y))
 
     def _create_menu(self):
         """Create the contextual menu for this view."""
@@ -354,7 +363,13 @@ class DockWidget(QDockWidget):
 
         self._buttons = QWidget(self._title_bar)
         self._buttons_layout = QHBoxLayout(self._buttons)
-        self._buttons_layout.setDirection(1)
+
+        # Use compatibility layer for layout direction
+        if is_qt6():
+            self._buttons_layout.setDirection(QHBoxLayout.Direction.RightToLeft)
+        else:
+            self._buttons_layout.setDirection(1)  # Qt5 integer value
+
         self._buttons_layout.setContentsMargins(0, 0, 0, 0)
         self._buttons_layout.setSpacing(1)
         self._buttons.setLayout(self._buttons_layout)
@@ -392,12 +407,12 @@ def _create_dock_widget(widget, name, closable=True, floatable=True):
     dock.setObjectName(name)
     dock.setWindowTitle(name)
 
-    # Set gui widget options.
-    options = QDockWidget.DockWidgetMovable
+    # Set gui widget options using compatibility layer
+    options = Qt.DockWidgetMovable
     if closable:
-        options = options | QDockWidget.DockWidgetClosable
+        options = options | Qt.DockWidgetClosable
     if floatable:
-        options = options | QDockWidget.DockWidgetFloatable
+        options = options | Qt.DockWidgetFloatable
 
     dock.setFeatures(options)
     dock.setAllowedAreas(
@@ -415,6 +430,7 @@ def _create_dock_widget(widget, name, closable=True, floatable=True):
 
 
 def _get_dock_position(position):
+    """Get dock position using compatibility layer."""
     return {
         'left': Qt.LeftDockWidgetArea,
         'right': Qt.RightDockWidgetArea,
@@ -514,7 +530,9 @@ class GUI(QMainWindow):
         if not QApplication.instance():  # pragma: no cover
             raise RuntimeError('A Qt application must be created.')
         super().__init__()
-        self.setDockOptions(QMainWindow.AllowTabbedDocks | QMainWindow.AllowNestedDocks)
+
+        # Use compatibility layer for dock options
+        self.setDockOptions(Qt.AllowTabbedDocks | Qt.AllowNestedDocks)
         self.setAnimated(False)
 
         logger.debug('Creating GUI.')
@@ -812,6 +830,8 @@ class GUI(QMainWindow):
         widget = _try_get_opengl_canvas(widget)
 
         dock = _create_dock_widget(widget, name, closable=closable, floatable=floatable)
+
+        # Use compatibility layer for adding dock widget
         self.addDockWidget(_get_dock_position(position), dock, Qt.Horizontal)
         if floating is not None:
             dock.setFloating(floating)

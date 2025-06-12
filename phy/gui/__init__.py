@@ -20,3 +20,6 @@ from .qt import (
 from .gui import GUI, GUIState, DockWidget
 from .actions import Actions, Snippets
 from .widgets import HTMLWidget, HTMLBuilder, Table, IPythonView, KeyValueWidget
+
+# Export Qt compatibility info for users who need it
+from .qt_compat import QT_VERSION, get_qt_version, is_qt5, is_qt6
