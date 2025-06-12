@@ -63,6 +63,11 @@ dev = [
     "memory_profiler",
     "mkdocs",
 ]
+
+klusta = [
+    "klusta @ git+https://github.com/kwikteam/klusta.git",
+    "klustakwik2 @ git+https://github.com/kwikteam/klustakwik2.git",
+]
 qt5 = ["PyQt5", "PyQtWebEngine"]
 qt6 = ["PyQt6", "PyQt6-WebEngine"]
 
