@@ -4,14 +4,15 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-from collections import defaultdict
 import logging
+from collections import defaultdict
 
 import numpy as np
-
-from phy.utils.color import selected_cluster_color
 from phylib.utils.geometry import get_non_overlapping_boxes
+
 from phy.plot.visuals import ScatterVisual, TextVisual
+from phy.utils.color import selected_cluster_color
+
 from .base import ManualClusteringView
 
 logger = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ class ProbeView(ManualClusteringView):
     def __init__(
         self, positions=None, best_channels=None, channel_labels=None, dead_channels=None, **kwargs
     ):
-        super(ProbeView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += ('do_show_labels',)
 
         # Normalize positions.
@@ -135,7 +136,7 @@ class ProbeView(ManualClusteringView):
         cluster_channels = {i: self.best_channels(cl) for i, cl in enumerate(cluster_ids)}
 
         # List of clusters per channel.
-        clusters_per_channel = defaultdict(lambda: [])
+        clusters_per_channel = defaultdict(list)
         for clu_idx, channels in cluster_channels.items():
             for channel in channels:
                 clusters_per_channel[channel].append(clu_idx)
@@ -168,7 +169,7 @@ class ProbeView(ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(ProbeView, self).attach(gui)
+        super().attach(gui)
         self.actions.add(self.toggle_show_labels, checkable=True, checked=self.do_show_labels)
 
         if not self.do_show_labels:

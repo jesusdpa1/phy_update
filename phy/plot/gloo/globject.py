@@ -8,7 +8,7 @@ import logging
 log = logging.getLogger(__name__)
 
 
-class GLObject(object):
+class GLObject:
     """Generic GL object that may live both on CPU and GPU"""
 
     # Internal id counter to keep track of GPU objects
@@ -91,7 +91,7 @@ class GLObject(object):
             self._need_setup = False
 
         if self.need_update:
-            log.log(5, '%s need update' % self.handle)
+            log.log(5, f'{self.handle} need update')
             self._update()
             self._need_update = False
 
@@ -125,29 +125,23 @@ class GLObject(object):
     def _create(self):
         """Dummy create method"""
 
-        pass
 
     def _delete(self):
         """Dummy delete method"""
 
-        pass
 
     def _activate(self):
         """Dummy activate method"""
 
-        pass
 
     def _deactivate(self):
         """Dummy deactivate method"""
 
-        pass
 
     def _setup(self):
         """Dummy setup method"""
 
-        pass
 
     def _update(self):
         """Dummy update method"""
 
-        pass

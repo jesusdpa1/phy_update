@@ -33,9 +33,8 @@ import logging
 import numpy as np
 
 from . import gl
-from .gpudata import GPUData
 from .globject import GLObject
-
+from .gpudata import GPUData
 
 log = logging.getLogger(__name__)
 
@@ -79,9 +78,8 @@ class Texture(GPUData, GLObject):
             shape = list(shape) + [
                 1,
             ]
-        elif len(shape) == ndims + 1:
-            if shape[-1] > 4:
-                raise ValueError('Too many channels for texture')
+        elif len(shape) == ndims + 1 and shape[-1] > 4:
+            raise ValueError('Too many channels for texture')
         return shape
 
     @property
@@ -129,7 +127,7 @@ class Texture(GPUData, GLObject):
 
     @property
     def gtype(self):
-        if self.dtype in Texture._gtypes.keys():
+        if self.dtype in Texture._gtypes:
             return Texture._gtypes[self.dtype]
         else:
             raise TypeError('No available GL type equivalent')
@@ -157,7 +155,7 @@ class Texture(GPUData, GLObject):
     def interpolation(self, value):
         """Texture interpolation for minication and magnification."""
         if isinstance(value, str):
-            value = getattr(gl, 'GL_%s' % value.upper())
+            value = getattr(gl, f'GL_{value.upper()}')
 
         if isinstance(value, (list, tuple)):
             self._interpolation = value
@@ -167,7 +165,7 @@ class Texture(GPUData, GLObject):
 
     def set_interpolation(self, value):
         if isinstance(value, str):
-            value = getattr(gl, 'GL_%s' % value.upper())
+            value = getattr(gl, f'GL_{value.upper()}')
             self._interpolation = value, value
 
     def _setup(self):
@@ -413,7 +411,7 @@ class TextureCube(Texture):
             gl.GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
             gl.GL_TEXTURE_CUBE_MAP_NEGATIVE_Z,
         ]
-        for i, target in enumerate(targets):
+        for _i, target in enumerate(targets):
             gl.glTexImage2D(
                 target,
                 0,

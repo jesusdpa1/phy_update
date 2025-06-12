@@ -16,16 +16,16 @@ import gzip
 from pathlib import Path
 
 import numpy as np
-
-from .base import BaseVisual
-from .gloo import gl
-from .transform import NDC
-from .utils import _tesselate_histogram, _get_texture, _get_array, _get_pos, _get_index
-from phy.gui.qt import is_high_dpi
 from phylib.io.array import _as_array
 from phylib.utils import Bunch
 from phylib.utils.geometry import _get_data_bounds
 
+from phy.gui.qt import is_high_dpi
+
+from .base import BaseVisual
+from .gloo import gl
+from .transform import NDC
+from .utils import _get_array, _get_index, _get_pos, _get_texture, _tesselate_histogram
 
 # ------------------------------------------------------------------------------
 # Utils
@@ -66,7 +66,7 @@ class PatchVisual(BaseVisual):
     default_color = DEFAULT_COLOR
 
     def __init__(self, primitive_type='triangle_fan'):
-        super(PatchVisual, self).__init__()
+        super().__init__()
         self.set_shader('patch')
         self.set_primitive_type(primitive_type)
         self.set_data_range(NDC)
@@ -175,7 +175,7 @@ class ScatterVisual(BaseVisual):
     )
 
     def __init__(self, marker=None, marker_scaling=None):
-        super(ScatterVisual, self).__init__()
+        super().__init__()
 
         # Set the marker type.
         self.marker = marker or self.default_marker
@@ -307,7 +307,7 @@ class UniformScatterVisual(BaseVisual):
     )
 
     def __init__(self, marker=None, color=None, size=None):
-        super(UniformScatterVisual, self).__init__()
+        super().__init__()
 
         # Set the marker type.
         self.marker = marker or self.default_marker
@@ -416,7 +416,7 @@ class PlotVisual(BaseVisual):
     _noconcat = ('x', 'y')
 
     def __init__(self):
-        super(PlotVisual, self).__init__()
+        super().__init__()
 
         self.set_shader('plot')
         self.set_primitive_type('line_strip')
@@ -571,7 +571,7 @@ class UniformPlotVisual(BaseVisual):
     _noconcat = ('x', 'y')
 
     def __init__(self, color=None, depth=None):
-        super(UniformPlotVisual, self).__init__()
+        super().__init__()
 
         self.set_shader('uni_plot')
         self.set_primitive_type('line_strip')
@@ -695,7 +695,7 @@ class HistogramVisual(BaseVisual):
     default_color = DEFAULT_COLOR
 
     def __init__(self):
-        super(HistogramVisual, self).__init__()
+        super().__init__()
 
         self.set_shader('histogram')
         self.set_primitive_type('triangles')
@@ -822,7 +822,7 @@ class TextVisual(BaseVisual):
     _noconcat = ('text',)
 
     def __init__(self, color=None, font_size=None):
-        super(TextVisual, self).__init__()
+        super().__init__()
         self.set_shader('msdf')
         self.set_primitive_type('triangles')
         self.set_data_range(NDC)
@@ -990,7 +990,7 @@ class TextVisual(BaseVisual):
     def on_draw(self):
         # NOTE: use linear interpolation for the SDF texture.
         self.program._uniforms['u_tex']._data.set_interpolation('linear')
-        super(TextVisual, self).on_draw()
+        super().on_draw()
 
 
 # ------------------------------------------------------------------------------
@@ -1013,7 +1013,7 @@ class LineVisual(BaseVisual):
     _init_keywords = ('color',)
 
     def __init__(self):
-        super(LineVisual, self).__init__()
+        super().__init__()
         self.set_shader('line')
         self.set_primitive_type('lines')
         self.set_data_range(NDC)
@@ -1143,7 +1143,7 @@ class LineAggGeomVisual(BaseVisual):  # pragma: no cover
     _init_keywords = ('color',)
 
     def __init__(self):
-        super(LineAggGeomVisual, self).__init__()
+        super().__init__()
         self.set_shader('line_agg_geom')
         self.set_primitive_type('line_strip_adjacency_ext')
         # Geometry shader params.
@@ -1252,7 +1252,7 @@ class PlotAggVisual(BaseVisual):
     _noconcat = ('x', 'y')
 
     def __init__(self, line_width=None, closed=False):
-        super(PlotAggVisual, self).__init__()
+        super().__init__()
 
         self.set_shader('plot_agg')
         self.set_primitive_type('triangle_strip')
@@ -1454,7 +1454,7 @@ class ImageVisual(BaseVisual):
     """
 
     def __init__(self):
-        super(ImageVisual, self).__init__()
+        super().__init__()
 
         self.set_shader('image')
         self.set_primitive_type('triangles')
@@ -1523,7 +1523,7 @@ class PolygonVisual(BaseVisual):
     default_color = (1, 1, 1, 1)
 
     def __init__(self):
-        super(PolygonVisual, self).__init__()
+        super().__init__()
         self.set_shader('polygon')
         self.set_primitive_type('line_loop')
         self.set_data_range(NDC)

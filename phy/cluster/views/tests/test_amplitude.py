@@ -5,14 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
 from phylib.io.mock import artificial_spike_samples
 from phylib.utils import Bunch, connect
 
 from phy.plot.tests import mouse_click
+
 from ..amplitude import AmplitudeView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test amplitude view

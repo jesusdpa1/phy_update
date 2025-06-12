@@ -7,8 +7,9 @@ along with all values found in the GUI cluster view.
 
 import logging
 
-from phy import IPlugin, connect
 from phylib.io.model import save_metadata
+
+from phy import IPlugin, connect
 
 logger = logging.getLogger('phy')
 

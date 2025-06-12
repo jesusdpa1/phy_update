@@ -6,8 +6,7 @@
 
 import numpy as np
 
-from .._history import History, GlobalHistory
-
+from .._history import GlobalHistory, History
 
 # ------------------------------------------------------------------------------
 # Tests
@@ -61,8 +60,8 @@ def test_iter_history():
     history = History()
 
     # Wrong arguments to iter().
-    assert len([_ for _ in history.iter(0, 0)]) == 0
-    assert len([_ for _ in history.iter(2, 1)]) == 0
+    assert len(list(history.iter(0, 0))) == 0
+    assert len(list(history.iter(2, 1))) == 0
 
     item0 = np.zeros(3)
     item1 = np.ones(4)
@@ -75,19 +74,19 @@ def test_iter_history():
     for i, item in enumerate(history):
         # Assert item<i>
         if i > 0:
-            assert id(item) == id(locals()['item{0:d}'.format(i - 1)])
+            assert id(item) == id(locals()[f'item{i - 1:d}'])
 
     for i, item in enumerate(history.iter(1, 2)):
         assert i == 0
         # Assert item<i>
         assert history.current_position == 3
-        assert id(item) == id(locals()['item{0:d}'.format(i)])
+        assert id(item) == id(locals()[f'item{i:d}'])
 
     for i, item in enumerate(history.iter(2, 3)):
         assert i == 0
         # Assert item<i>
         assert history.current_position == 3
-        assert id(item) == id(locals()['item{0:d}'.format(i + 1)])
+        assert id(item) == id(locals()[f'item{i + 1:d}'])
 
 
 def test_global_history():
@@ -140,4 +139,4 @@ def test_global_history():
     assert gh.undo() == ''
     assert gh.redo() == 'h1 first'
     assert gh.redo() == 'h2 first'
-    assert gh.redo() == 'h1 second' + 'h2 second'
+    assert gh.redo() == "h1 secondh2 second"

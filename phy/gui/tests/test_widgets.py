@@ -6,14 +6,15 @@
 
 from functools import partial
 from pathlib import Path
-from pytest import fixture, mark
 
 from phylib.utils import connect, unconnect
 from phylib.utils.testing import captured_logging
-import phy
-from .test_qt import _block
-from ..widgets import HTMLWidget, Table, Barrier, IPythonView, KeyValueWidget
+from pytest import fixture, mark
 
+import phy
+
+from ..widgets import Barrier, HTMLWidget, IPythonView, KeyValueWidget, Table
+from .test_qt import _block
 
 # ------------------------------------------------------------------------------
 # Fixtures
@@ -44,7 +45,7 @@ def table(qtbot):
             'id': i,
             'count': 100 - 10 * i,
             'float': float(i),
-            'is_masked': True if i in (2, 3, 5) else False,
+            'is_masked': i in (2, 3, 5),
         }
         for i in range(10)
     ]
@@ -130,11 +131,10 @@ def test_widget_javascript_debounce(qtbot, event_name):
     _block(lambda: widget.html is not None)
 
     event_code = (
-        lambda i: r"""
-    var event = new CustomEvent("phy_event", {detail: {name: '%s', data: {'i': %s}}});
+        lambda i: rf"""
+    var event = new CustomEvent("phy_event", {{detail: {{name: '{event_name}', data: {{'i': {i}}}}}}});
     document.dispatchEvent(event);
     """
-        % (event_name, i)
     )
 
     _l = []

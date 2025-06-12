@@ -6,14 +6,15 @@
 # -----------------------------------------------------------------------------
 
 import inspect
-from functools import partial, wraps
 import logging
 import re
 import sys
 import traceback
+from functools import partial, wraps
 
-from .qt import QKeySequence, QAction, require_qt, input_dialog, busy_cursor, _get_icon
 from phylib.utils import Bunch
+
+from .qt import QAction, QKeySequence, _get_icon, busy_cursor, input_dialog, require_qt
 
 logger = logging.getLogger(__name__)
 
@@ -120,7 +121,7 @@ def _show_shortcuts(shortcuts):
     for n in sorted(shortcuts):
         shortcut = _get_shortcut_string(shortcuts[n])
         if not n.startswith('_') and not shortcut.startswith('-'):
-            out.append('- {0:<40} {1:s}'.format(n, shortcut))
+            out.append(f'- {n:<40} {shortcut:s}')
     if out:
         print('Keyboard shortcuts')
         print('\n'.join(out))
@@ -133,7 +134,7 @@ def _show_snippets(snippets):
     for n in sorted(snippets):
         snippet = snippets[n]
         if not n.startswith('_'):
-            out.append('- {0:<40} :{1:s}'.format(n, snippet))
+            out.append(f'- {n:<40} :{snippet:s}')
     if out:
         print('Snippets')
         print('\n'.join(out))
@@ -187,18 +188,18 @@ def _create_qaction(gui, **kwargs):
     action = QAction(name, gui)
 
     # Show an input dialog if there are args.
-    callback = kwargs.get('callback', None)
+    callback = kwargs.get('callback')
     title = getattr(callback, '__name__', 'action')
     # Number of expected arguments.
-    n_args = kwargs.get('n_args', None) or len(_expected_args(callback))
+    n_args = kwargs.get('n_args') or len(_expected_args(callback))
 
     @wraps(callback)
     def wrapped(is_checked, *args):
-        if kwargs.get('checkable', None):
+        if kwargs.get('checkable'):
             args = (is_checked,) + args
-        if kwargs.get('prompt', None):
+        if kwargs.get('prompt'):
             args += (
-                _prompt_args(title, docstring, default=kwargs.get('prompt_default', None)) or ()
+                _prompt_args(title, docstring, default=kwargs.get('prompt_default')) or ()
             )
             if not args:  # pragma: no cover
                 logger.debug('User cancelled input prompt, aborting.')
@@ -210,30 +211,30 @@ def _create_qaction(gui, **kwargs):
             return
         try:
             # Set a busy cursor if set_busy is True.
-            with busy_cursor(kwargs.get('set_busy', None)):
+            with busy_cursor(kwargs.get('set_busy')):
                 return callback(*args)
         except Exception:  # pragma: no cover
             logger.warning('Error when executing action %s.', name)
             logger.debug(''.join(traceback.format_exception(*sys.exc_info())))
 
     action.triggered.connect(wrapped)
-    sequence = _get_qkeysequence(kwargs.get('shortcut', None))
+    sequence = _get_qkeysequence(kwargs.get('shortcut'))
     if not isinstance(sequence, (tuple, list)):
         sequence = [sequence]
     action.setShortcuts(sequence)
-    assert kwargs.get('docstring', None)
-    docstring = re.sub(r'\s+', ' ', kwargs.get('docstring', None))
-    docstring += ' (alias: {})'.format(kwargs.get('alias', None))
+    assert kwargs.get('docstring')
+    docstring = re.sub(r'\s+', ' ', kwargs.get('docstring'))
+    docstring += f" (alias: {kwargs.get('alias')})"
     action.setStatusTip(docstring)
     action.setWhatsThis(docstring)
-    action.setCheckable(kwargs.get('checkable', None))
-    action.setChecked(kwargs.get('checked', None))
-    if kwargs.get('icon', None):
+    action.setCheckable(kwargs.get('checkable'))
+    action.setChecked(kwargs.get('checked'))
+    if kwargs.get('icon'):
         action.setIcon(_get_icon(kwargs['icon']))
     return action
 
 
-class Actions(object):
+class Actions:
     """Group of actions bound to a GUI.
 
     This class attaches to a GUI and implements the following features:
@@ -484,13 +485,13 @@ class Actions(object):
         # Get the action.
         action = self._actions_dict.get(name, None)
         if not action:
-            raise ValueError("Action `{}` doesn't exist.".format(name))
+            raise ValueError(f"Action `{name}` doesn't exist.")
         if not name.startswith('_'):
             logger.debug('Execute action `%s`.', name)
         try:
             return action.callback(*args)
         except TypeError as e:
-            logger.warning('Invalid action arguments: ' + str(e))
+            logger.warning(f"Invalid action arguments: {str(e)}")
             return
 
     def remove(self, name):
@@ -517,10 +518,10 @@ class Actions(object):
             if not action.shortcut and not action.alias:
                 continue
             # Only show alias for actions with no shortcut.
-            alias_str = ' (:%s)' % action.alias if action.alias != name else ''
+            alias_str = f' (:{action.alias})' if action.alias != name else ''
             shortcut = action.shortcut or '-'
             shortcut = shortcut if isinstance(action.shortcut, str) else ', '.join(shortcut)
-            out[name] = '%s%s' % (shortcut, alias_str)
+            out[name] = f'{shortcut}{alias_str}'
         return out
 
     def show_shortcuts(self):
@@ -532,7 +533,7 @@ class Actions(object):
         return name in self._actions_dict
 
     def __repr__(self):
-        return '<Actions {}>'.format(sorted(self._actions_dict))
+        return f'<Actions {sorted(self._actions_dict)}>'
 
 
 # -----------------------------------------------------------------------------
@@ -540,7 +541,7 @@ class Actions(object):
 # -----------------------------------------------------------------------------
 
 
-class Snippets(object):
+class Snippets:
     """Provide keyboard snippets to quickly execute actions from a GUI.
 
     This class attaches to a GUI and an `Actions` instance. To every command
@@ -646,14 +647,14 @@ class Snippets(object):
 
             # Lowercase letters.
             self.actions.add(
-                name='_snippet_{}'.format(i), shortcut=char, callback=_make_func(char)
+                name=f'_snippet_{i}', shortcut=char, callback=_make_func(char)
             )
 
             # Uppercase letters.
             if char in self._snippet_chars[:26]:
                 self.actions.add(
-                    name='_snippet_{}_upper'.format(i),
-                    shortcut='shift+' + char,
+                    name=f'_snippet_{i}_upper',
+                    shortcut=f"shift+{char}",
                     callback=_make_func(char.upper()),
                 )
 

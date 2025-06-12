@@ -10,7 +10,7 @@
 # ------------------------------------------------------------------------------
 
 
-class History(object):
+class History:
     """Implement a history of actions with an undo stack."""
 
     def __init__(self, base_item=None):
@@ -129,7 +129,7 @@ class GlobalHistory(History):
     """Merge several controllers with different undo stacks."""
 
     def __init__(self, process_ups=None):
-        super(GlobalHistory, self).__init__(())
+        super().__init__(())
         self.process_ups = process_ups
 
     def action(self, *controllers):

@@ -18,6 +18,7 @@ Example usage:
 
 import logging
 import sys
+
 from .texture import Texture2D
 
 log = logging.getLogger(__name__)

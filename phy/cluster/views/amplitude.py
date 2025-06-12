@@ -1,3 +1,4 @@
+
 """Amplitude view."""
 
 
@@ -8,15 +9,15 @@
 import logging
 
 import numpy as np
-
-from phy.utils.color import selected_cluster_color, add_alpha
 from phylib.utils._types import _as_array
 from phylib.utils.event import emit
 
 from phy.cluster._utils import RotatingProperty
-from phy.plot.transform import Rotate, Scale, Translate, Range, NDC
-from phy.plot.visuals import ScatterVisual, HistogramVisual, PatchVisual
-from .base import ManualClusteringView, MarkerSizeMixin, LassoMixin
+from phy.plot.transform import NDC, Range, Rotate, Scale, Translate
+from phy.plot.visuals import HistogramVisual, PatchVisual, ScatterVisual
+from phy.utils.color import add_alpha, selected_cluster_color
+
+from .base import LassoMixin, ManualClusteringView, MarkerSizeMixin
 from .histogram import _compute_histogram
 
 logger = logging.getLogger(__name__)
@@ -185,7 +186,9 @@ class AmplitudeView(MarkerSizeMixin, LassoMixin, ManualClusteringView):
             ]
         )
         self.patch_visual.program['u_interval_size'] = 0.5 * (x1 - x0)
-        self.patch_visual.set_data(pos=pos, color=self.time_range_color, depth=[0, 0, 1, 1])
+        self.patch_visual.set_data(
+            pos=pos, color=self.time_range_color, depth=[0, 0, 1, 1]
+        )
         self.canvas.update()
 
     def _plot_cluster(self, bunch):
@@ -215,7 +218,9 @@ class AmplitudeView(MarkerSizeMixin, LassoMixin, ManualClusteringView):
         if not load_all:
             # Add None cluster which means background spikes.
             cluster_ids = [None] + cluster_ids
-        bunchs = self.amplitudes[self.amplitudes_type](cluster_ids, load_all=load_all) or ()
+        bunchs = (
+            self.amplitudes[self.amplitudes_type](cluster_ids, load_all=load_all) or ()
+        )
         # Add a pos attribute in bunchs in addition to x and y.
         for i, (cluster_id, bunch) in enumerate(zip(cluster_ids, bunchs)):
             spike_ids = _as_array(bunch.spike_ids)
@@ -268,7 +273,7 @@ class AmplitudeView(MarkerSizeMixin, LassoMixin, ManualClusteringView):
             return callback
 
         for a in self.amplitudes_types.keys():
-            name = 'Change amplitudes type to %s' % a
+            name = f'Change amplitudes type to {a}'
             self.actions.add(
                 _make_amplitude_action(a),
                 show_shortcut=False,

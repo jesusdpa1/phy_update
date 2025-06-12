@@ -5,14 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
 from phylib.io.mock import artificial_waveforms
 from phylib.utils import Bunch, connect
 
 from phy.plot.tests import mouse_click
+
 from ..template import TemplateView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test template view
@@ -58,7 +57,7 @@ def test_template_view_1(qtbot, tempdir, gui):
             for i in cluster_ids
         }
 
-    class Supervisor(object):
+    class Supervisor:
         pass
 
     s = Supervisor()

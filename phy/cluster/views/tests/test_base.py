@@ -5,12 +5,12 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
 from phylib.utils import emit
-from phy.utils.color import selected_cluster_color, colormaps
+
+from phy.utils.color import colormaps, selected_cluster_color
+
 from ..base import BaseColorView, ManualClusteringView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test manual clustering view
@@ -57,7 +57,7 @@ def test_manual_clustering_view_2(qtbot, gui):
     )
     v.attach(gui)
 
-    class Supervisor(object):
+    class Supervisor:
         pass
 
     emit('select', Supervisor(), cluster_ids=[0, 1])

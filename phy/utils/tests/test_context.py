@@ -8,11 +8,10 @@ from pickle import dump, load
 
 import numpy as np
 from numpy.testing import assert_array_equal as ae
+from phylib.io.array import read_array, write_array
 from pytest import fixture
 
-from phylib.io.array import write_array, read_array
 from ..context import Context, _fullname
-
 
 # ------------------------------------------------------------------------------
 # Fixtures
@@ -21,7 +20,7 @@ from ..context import Context, _fullname
 
 @fixture(scope='function')
 def context(tempdir):
-    ctx = Context('{}/cache/'.format(tempdir), verbose=1)
+    ctx = Context(f'{tempdir}/cache/', verbose=1)
     return ctx
 
 
@@ -88,7 +87,7 @@ def test_context_cache(context):
 
 
 def test_context_cache_method(tempdir, context):
-    class A(object):
+    class A:
         def __init__(self, ctx):
             self.f = ctx.cache(self.f)
             self._l = []
@@ -109,7 +108,7 @@ def test_context_cache_method(tempdir, context):
     assert a._l == [3]
 
     # Recreate the context.
-    context = Context('{}/cache/'.format(tempdir), verbose=1)
+    context = Context(f'{tempdir}/cache/', verbose=1)
     # Recreate the class.
     a = A(context)
     assert a.f(3) == 3

@@ -1,6 +1,6 @@
 """Show how to add a custom cluster histogram view showing cluster statistics."""
 
-from phy import IPlugin, Bunch
+from phy import Bunch, IPlugin
 from phy.cluster.views import HistogramView
 
 

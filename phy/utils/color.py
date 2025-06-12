@@ -4,15 +4,14 @@
 # Imports
 # ------------------------------------------------------------------------------
 
-import colorcet as cc
 import logging
 
-from phylib.utils import Bunch
-from phylib.io.array import _index_of
-
+import colorcet as cc
 import numpy as np
-from numpy.random import uniform
 from matplotlib.colors import hsv_to_rgb, rgb_to_hsv
+from numpy.random import uniform
+from phylib.io.array import _index_of
+from phylib.utils import Bunch
 
 logger = logging.getLogger(__name__)
 
@@ -35,10 +34,7 @@ def _is_bright(rgb):
     """
     L = 0
     for c, coeff in zip(rgb, (0.2126, 0.7152, 0.0722)):
-        if c <= 0.03928:
-            c = c / 12.92
-        else:
-            c = ((c + 0.055) / 1.055) ** 2.4
+        c = c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
         L += c * coeff
     if (L + 0.05) / (0.0 + 0.05) > (1.0 + 0.05) / (L + 0.05):
         return True
@@ -220,7 +216,7 @@ def add_alpha(c, alpha=1.0):
         if c.shape[-1] == 4:
             c = c[..., :3]
         assert c.shape[-1] == 3
-        out = np.concatenate([c, alpha * np.ones((c.shape[:-1] + (1,)))], axis=-1)
+        out = np.concatenate([c, alpha * np.ones(c.shape[:-1] + (1,))], axis=-1)
         assert out.ndim == c.ndim
         assert out.shape[-1] == c.shape[-1] + 1
         return out
@@ -237,7 +233,7 @@ def _categorize(values):
     return values
 
 
-class ClusterColorSelector(object):
+class ClusterColorSelector:
     """Assign a color to clusters depending on cluster labels or metrics."""
 
     _colormap = colormaps.categorical
@@ -319,7 +315,7 @@ class ClusterColorSelector(object):
 
     def _get_cluster_value(self, cluster_id):
         """Return the field value for a given cluster."""
-        return self._fun(cluster_id) if hasattr(self._fun, '__call__') else self._fun or 0
+        return self._fun(cluster_id) if callable(self._fun) else self._fun or 0
 
     def get(self, cluster_id, alpha=None):
         """Return the RGBA color of a single cluster."""

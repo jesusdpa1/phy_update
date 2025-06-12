@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from phylib.utils._misc import _fullname
+
 from .config import load_master_config
 
 logger = logging.getLogger(__name__)
@@ -45,7 +46,6 @@ class IPlugin(metaclass=IPluginRegistry):
 
     """
 
-    pass
 
 
 def get_plugin(name):
@@ -53,7 +53,7 @@ def get_plugin(name):
     for plugin in IPluginRegistry.plugins:
         if name in plugin.__name__:
             return plugin
-    raise ValueError('The plugin %s cannot be found.' % name)
+    raise ValueError(f'The plugin {name} cannot be found.')
 
 
 # ------------------------------------------------------------------------------

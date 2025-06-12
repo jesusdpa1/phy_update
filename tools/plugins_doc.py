@@ -2,9 +2,9 @@
 
 import ast
 import difflib
+import re
 from pathlib import Path
 from pprint import pprint
-import re
 
 
 def is_valid_python(code):
@@ -34,7 +34,7 @@ for m in reversed(list(pattern.finditer(plugins_doc))):
     plugins_doc = plugins_doc[:i] + plugin_contents + plugins_doc[j:]
 
     # Update the README.
-    title = class_name_pattern.search(plugin_contents).group(1) + 'Plugin'
+    title = f"{class_name_pattern.search(plugin_contents).group(1)}Plugin"
     desc = plugin_contents.splitlines()[0].replace('"', '')
     url = filename.name
     readme.append(f'* [{title}]({url}): {desc}')
@@ -42,7 +42,7 @@ for m in reversed(list(pattern.finditer(plugins_doc))):
 readme = sorted(readme)
 
 # Update the plugin README
-(root_dir / 'plugins/README.md').write_text('# phy plugin examples\n\n' + '\n'.join(readme) + '\n')
+(root_dir / 'plugins/README.md').write_text(f"# phy plugin examples\n\n{'\\n'.join(readme)}\n")
 
 
 # Make sure the copied and pasted code in the Markdown file is correct.

@@ -6,18 +6,19 @@
 
 # from contextlib import contextmanager
 
-from pytest import fixture
 import numpy as np
 from numpy.testing import assert_array_equal as ae
+from phylib.utils import Bunch, connect, emit
+from pytest import fixture
 
-from .. import supervisor as _supervisor
-from ..supervisor import Supervisor, TaskLogger, ClusterView, SimilarityView, ActionCreator
 from phy.gui import GUI
-from phy.gui.widgets import Barrier
 from phy.gui.qt import qInstallMessageHandler
 from phy.gui.tests.test_widgets import _assert, _wait_until_table_ready
+from phy.gui.widgets import Barrier
 from phy.utils.context import Context
-from phylib.utils import connect, Bunch, emit
+
+from .. import supervisor as _supervisor
+from ..supervisor import ActionCreator, ClusterView, SimilarityView, Supervisor, TaskLogger
 
 
 def handler(msg_type, msg_log_context, msg_string):
@@ -75,7 +76,7 @@ def supervisor(qtbot, gui, cluster_ids, cluster_groups, cluster_labels, similari
 
 @fixture
 def tl():
-    class MockClusterView(object):
+    class MockClusterView:
         _selected = [0]
 
         def select(self, cl, callback=None, **kwargs):
@@ -91,7 +92,7 @@ def tl():
     class MockSimilarityView(MockClusterView):
         pass
 
-    class MockSupervisor(object):
+    class MockSupervisor:
         def merge(self, cluster_ids, to, callback=None):
             callback(Bunch(deleted=cluster_ids, added=[to]))
 
@@ -201,7 +202,7 @@ def data():
         {
             'id': i,
             'n_spikes': 100 - 10 * i,
-            'group': {2: 'noise', 3: 'noise', 5: 'mua', 8: 'good'}.get(i, None),
+            'group': {2: 'noise', 3: 'noise', 5: 'mua', 8: 'good'}.get(i),
             'is_masked': i in (2, 3, 5),
         }
         for i in range(10)

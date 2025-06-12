@@ -5,14 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
-from phylib.utils import connect
 from phylib.io.mock import artificial_spike_clusters, artificial_spike_samples
+from phylib.utils import connect
 
 from phy.plot.tests import mouse_click
+
 from ..raster import RasterView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test scatter view
@@ -25,7 +24,7 @@ def test_raster_0(qtbot, gui):
     spike_clusters = np.arange(n)
     cluster_ids = np.arange(n)
 
-    class Supervisor(object):
+    class Supervisor:
         pass
 
     s = Supervisor()

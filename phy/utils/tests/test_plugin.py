@@ -7,11 +7,10 @@
 
 from textwrap import dedent
 
+from phylib.utils._misc import write_text
 from pytest import fixture, raises
 
-from ..plugin import IPluginRegistry, IPlugin, get_plugin, discover_plugins, attach_plugins
-from phylib.utils._misc import write_text
-
+from ..plugin import IPlugin, IPluginRegistry, attach_plugins, discover_plugins, get_plugin
 
 # ------------------------------------------------------------------------------
 # Fixtures
@@ -54,7 +53,7 @@ def test_discover_plugins(tempdir, no_native_plugins):
 
 
 def test_attach_plugins(tempdir):
-    class MyController(object):
+    class MyController:
         pass
 
     write_text(
@@ -74,12 +73,11 @@ def test_attach_plugins(tempdir):
             controller.plugin2 = True
 
     contents = dedent(
-        """
+        f"""
     c = get_config()
-    c.Plugins.dirs = ['%s']
+    c.Plugins.dirs = ['{tempdir}']
     c.MyController.plugins = ['MyPlugin1']
     """
-        % tempdir
     )
     write_text(tempdir / 'phy_config.py', contents)
 

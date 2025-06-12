@@ -9,7 +9,6 @@ import logging
 from textwrap import dedent
 
 import numpy as np
-
 from phylib.utils.geometry import range_transform
 
 logger = logging.getLogger(__name__)
@@ -57,12 +56,12 @@ def _glslify(r):
     else:
         r = _call_if_callable(r)
         assert 2 <= len(r) <= 4
-        return 'vec{}({})'.format(len(r), ', '.join(map(str, r)))
+        return f"vec{len(r)}({', '.join(map(str, r))})"
 
 
 def _call_if_callable(s):
     """Call a variable if it's a callable, otherwise return it."""
-    if hasattr(s, '__call__'):
+    if callable(s):
         return s()
     return s
 
@@ -100,7 +99,7 @@ def _fix_coordinate_in_visual(visual, coord):
     """Insert GLSL code to fix the position on the x or y coordinate."""
     assert coord in ('x', 'y')
     visual.inserter.insert_vert(
-        'gl_Position.{coord} = pos_orig.{coord};'.format(coord=coord), 'after_transforms'
+        f'gl_Position.{coord} = pos_orig.{coord};', 'after_transforms'
     )
 
 
@@ -123,12 +122,12 @@ def subplot_bounds(shape=None, index=None):
 
 def subplot_bounds_glsl(shape=None, index=None):
     """Get the data bounds in GLSL of a subplot."""
-    x0 = '-1.0 + 2.0 * {i}.y / {s}.y'.format(s=shape, i=index)
-    y0 = '+1.0 - 2.0 * ({i}.x + 1) / {s}.x'.format(s=shape, i=index)
-    x1 = '-1.0 + 2.0 * ({i}.y + 1) / {s}.y'.format(s=shape, i=index)
-    y1 = '+1.0 - 2.0 * ({i}.x) / {s}.x'.format(s=shape, i=index)
+    x0 = f'-1.0 + 2.0 * {index}.y / {shape}.y'
+    y0 = f'+1.0 - 2.0 * ({index}.x + 1) / {shape}.x'
+    x1 = f'-1.0 + 2.0 * ({index}.y + 1) / {shape}.y'
+    y1 = f'+1.0 - 2.0 * ({index}.x) / {shape}.x'
 
-    return 'vec4(\n{x0}, \n{y0}, \n{x1}, \n{y1})'.format(x0=x0, y0=y0, x1=x1, y1=y1)
+    return f'vec4(\n{x0}, \n{y0}, \n{x1}, \n{y1})'
 
 
 def extend_bounds(bounds_list):
@@ -165,7 +164,7 @@ NDC = (-1.0, -1.0, +1.0, +1.0)
 # ------------------------------------------------------------------------------
 
 
-class BaseTransform(object):
+class BaseTransform:
     """Base class for all transforms."""
 
     def __init__(self, **kwargs):
@@ -212,7 +211,7 @@ class Translate(BaseTransform):
     gpu_var = None
 
     def __init__(self, amount=None, **kwargs):
-        super(Translate, self).__init__(amount=amount, **kwargs)
+        super().__init__(amount=amount, **kwargs)
 
     def apply(self, arr, param=None):
         """Apply a translation to a NumPy array."""
@@ -223,16 +222,16 @@ class Translate(BaseTransform):
     def glsl(self, var):
         """Return a GLSL snippet that applies the translation to a given GLSL variable name."""
         assert var
-        return """
+        return f"""
         // Translate transform.
-        {var} = {var} + {translate};
-        """.format(var=var, translate=self.gpu_var or _call_if_callable(self.amount))
+        {var} = {var} + {self.gpu_var or _call_if_callable(self.amount)};
+        """
 
     def inverse(self):
         """Return the inverse Translate instance."""
         return Translate(
             amount=_minus(_call_if_callable(self.amount)) if self.amount is not None else None,
-            gpu_var=('-%s' % self.gpu_var) if self.gpu_var else None,
+            gpu_var=f'-{self.gpu_var}' if self.gpu_var else None,
         )
 
 
@@ -252,7 +251,7 @@ class Scale(BaseTransform):
     gpu_var = None
 
     def __init__(self, amount=None, **kwargs):
-        super(Scale, self).__init__(amount=amount, **kwargs)
+        super().__init__(amount=amount, **kwargs)
 
     def apply(self, arr, param=None):
         """Apply a scaling to a NumPy array."""
@@ -263,16 +262,16 @@ class Scale(BaseTransform):
     def glsl(self, var):
         """Return a GLSL snippet that applies the scaling to a given GLSL variable name."""
         assert var
-        return """
+        return f"""
         // Translate transform.
-        {var} = {var} * {scaling};
-        """.format(var=var, scaling=self.gpu_var or _call_if_callable(self.amount))
+        {var} = {var} * {self.gpu_var or _call_if_callable(self.amount)};
+        """
 
     def inverse(self):
         """Return the inverse Scale instance."""
         return Scale(
             amount=_inverse(_call_if_callable(self.amount)) if self.amount is not None else None,
-            gpu_var=('1.0 / %s' % self.gpu_var) if self.gpu_var else None,
+            gpu_var=f'1.0 / {self.gpu_var}' if self.gpu_var else None,
         )
 
 
@@ -289,7 +288,7 @@ class Rotate(BaseTransform):
     direction = 'cw'
 
     def __init__(self, direction=None, **kwargs):
-        super(Rotate, self).__init__(direction=direction, **kwargs)
+        super().__init__(direction=direction, **kwargs)
 
     def apply(self, arr, direction=None):
         """Apply a rotation to a NumPy array."""
@@ -311,10 +310,10 @@ class Rotate(BaseTransform):
         direction = self.direction or 'cw'
         assert direction in ('cw', 'ccw')
         m = '' if direction == 'ccw' else '-'
-        return """
+        return f"""
         // Rotation transform.
         {var} = {m}vec2(-{var}.y, {var}.x);
-        """.format(var=var, m=m)
+        """
 
     def inverse(self):
         """Return the inverse Rotate instance."""
@@ -346,7 +345,7 @@ class Range(BaseTransform):
     to_gpu_var = None
 
     def __init__(self, from_bounds=None, to_bounds=None, **kwargs):
-        super(Range, self).__init__(from_bounds=from_bounds, to_bounds=to_bounds, **kwargs)
+        super().__init__(from_bounds=from_bounds, to_bounds=to_bounds, **kwargs)
 
     def apply(self, arr, from_bounds=None, to_bounds=None):
         """Apply the transform to a NumPy array."""
@@ -366,13 +365,13 @@ class Range(BaseTransform):
         from_bounds = _glslify(self.from_gpu_var or self.from_bounds)
         to_bounds = _glslify(self.to_gpu_var or self.to_bounds)
 
-        return """
+        return f"""
         // Range transform.
-        {var} = ({var} - {f}.xy);
-        {var} = {var} * ({t}.zw - {t}.xy);
-        {var} = {var} / ({f}.zw - {f}.xy);
-        {var} = {var} + {t}.xy;
-        """.format(var=var, f=from_bounds, t=to_bounds)
+        {var} = ({var} - {from_bounds}.xy);
+        {var} = {var} * ({to_bounds}.zw - {to_bounds}.xy);
+        {var} = {var} / ({from_bounds}.zw - {from_bounds}.xy);
+        {var} = {var} + {to_bounds}.xy;
+        """
 
     def inverse(self):
         """Return the inverse Range instance."""
@@ -416,7 +415,7 @@ def Subplot(shape=None, index=None, shape_gpu_var=None, index_gpu_var=None):
     if shape_gpu_var is not None:
         to_gpu_var = subplot_bounds_glsl(shape=shape_gpu_var, index=index_gpu_var)
     if shape is not None:
-        if hasattr(shape, '__call__') and hasattr(index, '__call__'):
+        if callable(shape) and callable(index):
             to_bounds = lambda: subplot_bounds(shape(), index())
         else:
             to_bounds = subplot_bounds(shape, index)
@@ -443,7 +442,7 @@ class Clip(BaseTransform):
     bounds = NDC
 
     def __init__(self, bounds=None, **kwargs):
-        super(Clip, self).__init__(bounds=bounds, **kwargs)
+        super().__init__(bounds=bounds, **kwargs)
 
     def apply(self, arr, bounds=None):
         """Apply the clipping to a NumPy array."""
@@ -464,7 +463,7 @@ class Clip(BaseTransform):
         assert var
         bounds = _glslify(self.bounds)
 
-        return """
+        return f"""
         // Clip transform.
         if (({var}.x < {bounds}.x) ||
             ({var}.y < {bounds}.y) ||
@@ -472,7 +471,7 @@ class Clip(BaseTransform):
             ({var}.y > {bounds}.w)) {{
             discard;
         }}
-        """.format(bounds=bounds, var=var)
+        """
 
     def inverse(self):
         """Return the same instance (the inverse has no sense for a Clip transform)."""
@@ -484,7 +483,7 @@ class Clip(BaseTransform):
 # ------------------------------------------------------------------------------
 
 
-class TransformChain(object):
+class TransformChain:
     """A linear sequence of transforms."""
 
     def __init__(self, transforms=None, origin=None):
@@ -509,7 +508,7 @@ class TransformChain(object):
 
     def get(self, class_name):
         """Get a transform in the chain from its name."""
-        for transform, origin in self._transforms:
+        for transform, _origin in self._transforms:
             if transform.__class__.__name__ == class_name:
                 return transform
 

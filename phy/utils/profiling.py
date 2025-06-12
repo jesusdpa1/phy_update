@@ -5,14 +5,14 @@
 # ------------------------------------------------------------------------------
 
 import builtins
-from contextlib import contextmanager
-from cProfile import Profile
 import functools
-from io import StringIO
 import logging
 import os
-from pathlib import Path
 import sys
+from contextlib import contextmanager
+from cProfile import Profile
+from io import StringIO
+from pathlib import Path
 from timeit import default_timer
 
 from .config import ensure_dir_exists
@@ -38,7 +38,7 @@ class ContextualProfile(Profile):  # pragma: no cover
     """Class used for profiling."""
 
     def __init__(self, *args, **kwds):
-        super(ContextualProfile, self).__init__(*args, **kwds)
+        super().__init__(*args, **kwds)
         self.enable_count = 0
 
     def enable_by_count(self, subcalls=True, builtins=True):
@@ -118,10 +118,10 @@ def _profile(prof, statement, glob, loc):
     sys.stdout = old_stdout
     stats = output.getvalue()
     # Stop capture.
-    if 'Line' in prof.__class__.__name__:  # pragma: no cover
-        fn = 'lstats.txt'
-    else:
-        fn = 'stats.txt'
+    fn = (
+        'lstats.txt' if 'Line' in prof.__class__.__name__ else 'stats.txt'
+    )  # pragma: no cover
+
     stats_file = dir / fn
     stats_file.write_text(stats)
 
@@ -134,7 +134,9 @@ def _enable_pdb():  # pragma: no cover
     from PyQt5.QtCore import pyqtRemoveInputHook
 
     pyqtRemoveInputHook()
-    sys.excepthook = ultratb.FormattedTB(mode='Verbose', color_scheme='Linux', call_pdb=True)
+    sys.excepthook = ultratb.FormattedTB(
+        mode='Verbose', color_scheme='Linux', call_pdb=True
+    )
 
 
 def _memory_usage():  # pragma: no cover

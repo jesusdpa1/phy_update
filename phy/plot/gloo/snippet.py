@@ -9,7 +9,7 @@ import re
 from . import parser
 
 
-class Snippet(object):
+class Snippet:
     """
     A snippet is a piece of GLSL code that can be injected into an another GLSL
     code. It provides the necessary machinery to take care of name collisions,
@@ -88,15 +88,15 @@ class Snippet(object):
 
         # Symbol table
         self._symbols = {}
-        for name, dtype in self._objects['attributes']:
+        for name, _dtype in self._objects['attributes']:
             self._symbols[name] = '%s_%d' % (name, self._id)
-        for name, dtype in self._objects['uniforms']:
+        for name, _dtype in self._objects['uniforms']:
             self._symbols[name] = '%s_%d' % (name, self._id)
-        for name, dtype in self._objects['varyings']:
+        for name, _dtype in self._objects['varyings']:
             self._symbols[name] = '%s_%d' % (name, self._id)
-        for name, dtype in self._objects['consts']:
+        for name, _dtype in self._objects['consts']:
             self._symbols[name] = '%s_%d' % (name, self._id)
-        for rtype, name, args, code in self._objects['functions']:
+        for _rtype, name, args, code in self._objects['functions']:
             self._symbols[name] = '%s_%d' % (name, self._id)
 
         # Aliases (through kwargs)
@@ -109,11 +109,11 @@ class Snippet(object):
     def process_kwargs(self, **kwargs):
         """Process kwargs as given in __init__() or __call__()"""
 
-        if 'name' in kwargs.keys():
+        if 'name' in kwargs:
             self._name = kwargs['name']
             del kwargs['name']
 
-        if 'call' in kwargs.keys():
+        if 'call' in kwargs:
             self._call = kwargs['call']
             del kwargs['call']
 
@@ -156,7 +156,7 @@ class Snippet(object):
 
         symbols = {}
         objects = self._objects
-        for name, dtype in objects['uniforms'] + objects['attributes'] + objects['varyings']:
+        for name, _dtype in objects['uniforms'] + objects['attributes'] + objects['varyings']:
             symbols[name] = self.symbols[name]
         # return self._symbols
         return symbols
@@ -250,7 +250,7 @@ class Snippet(object):
         if deepsearch:
             for snippet in self.snippets:
                 symbols = snippet._symbols
-                if name in symbols.keys():
+                if name in symbols:
                     return symbols[name]
             return None
 
@@ -340,12 +340,12 @@ class Snippet(object):
         names = objects['uniforms'] + objects['attributes'] + objects['varyings']
         for _, name, _, _ in functions:
             symbol = self.symbols[name]
-            code = re.sub(r'(?<=[^\w])(%s)(?=\()' % name, symbol, code)
+            code = re.sub(rf'(?<=[^\w])({name})(?=\()', symbol, code)
         for name, _ in names:
             # Variable starting "__" are protected and unaliased
             # if not name.startswith("__"):
             symbol = self.symbols[name]
-            code = re.sub(r'(?<=[^\w])(%s)(?=[^\w])' % name, symbol, code)
+            code = re.sub(rf'(?<=[^\w])({name})(?=[^\w])', symbol, code)
         return code
 
     @property
@@ -404,7 +404,7 @@ class Snippet(object):
                 # If an argument has been given, we put it at the end
                 # This handles hooks of the form <transform(args)>
                 if arguments is not None:
-                    s += '(%s)' % arguments
+                    s += f'({arguments})'
                 else:
                     s += '()'
             if self.next:
@@ -412,7 +412,7 @@ class Snippet(object):
                 if operand in '+-/*':
                     call = other.mangled_call(function, arguments).strip()
                     if len(call):
-                        s += ' ' + operand + ' ' + call
+                        s += f" {operand} {call}"
 
         # No function defined in this snippet, we look for next one
         else:
@@ -448,10 +448,7 @@ class Snippet(object):
     def copy(self, deep=False):
         """Shallow or deep copy of the snippet"""
 
-        if deep:
-            snippet = copy.deepcopy(self)
-        else:
-            snippet = copy.copy(self)
+        snippet = copy.deepcopy(self) if deep else copy.copy(self)
         return snippet
 
     def __op__(self, operand, other):
@@ -507,7 +504,7 @@ class Snippet(object):
             s += ' '
         s += ')'
         if self._next:
-            s += ' %s %s' % self._next
+            s += ' {} {}'.format(*self._next)
 
         return s
 
@@ -572,5 +569,5 @@ class Snippet(object):
                     found = True
 
         if not found:
-            error = 'Snippet does not have such key ("%s")' % key
+            error = f'Snippet does not have such key ("{key}")'
             raise IndexError(error)

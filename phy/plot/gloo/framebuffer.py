@@ -39,7 +39,6 @@ from . import gl
 from .globject import GLObject
 from .texture import Texture2D
 
-
 log = logging.getLogger(__name__)
 
 

@@ -4,38 +4,37 @@
 # Imports
 # ------------------------------------------------------------------------------
 
-from itertools import cycle, islice
 import logging
 import os
-from pathlib import Path
 import shutil
 import tempfile
 import unittest
+from itertools import cycle, islice
+from pathlib import Path
 
 import numpy as np
-from pytestqt.plugin import QtBot
-
 from phylib.io.mock import (
     artificial_features,
-    artificial_traces,
     artificial_spike_clusters,
     artificial_spike_samples,
+    artificial_traces,
     artificial_waveforms,
 )
-
-from phylib.utils import connect, unconnect, Bunch, reset, emit
+from phylib.utils import Bunch, connect, emit, reset, unconnect
+from pytestqt.plugin import QtBot
 
 from phy.cluster.views import (
-    WaveformView,
-    FeatureView,
     AmplitudeView,
-    TraceView,
+    FeatureView,
     TemplateView,
+    TraceView,
+    WaveformView,
 )
 from phy.gui.qt import Debouncer, create_app
 from phy.gui.widgets import Barrier
 from phy.plot.tests import mouse_click
-from ..base import BaseController, WaveformMixin, FeatureMixin, TraceMixin, TemplateMixin
+
+from ..base import BaseController, FeatureMixin, TemplateMixin, TraceMixin, WaveformMixin
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 
-class MyModel(object):
+class MyModel:
     seed = np.random.seed(0)
     n_channels = 8
     n_spikes = 20000
@@ -107,31 +106,26 @@ class MyController(BaseController):
 class MyControllerW(WaveformMixin, MyController):
     """With waveform view."""
 
-    pass
 
 
 class MyControllerF(FeatureMixin, MyController):
     """With feature view."""
 
-    pass
 
 
 class MyControllerT(TraceMixin, MyController):
     """With trace view."""
 
-    pass
 
 
 class MyControllerTmp(TemplateMixin, MyController):
     """With templates."""
 
-    pass
 
 
 class MyControllerFull(TemplateMixin, WaveformMixin, FeatureMixin, TraceMixin, MyController):
     """With everything."""
 
-    pass
 
 
 def _mock_controller(tempdir, cls):
@@ -150,7 +144,7 @@ def _mock_controller(tempdir, cls):
 # ------------------------------------------------------------------------------
 
 
-class MinimalControllerTests(object):
+class MinimalControllerTests:
     # Methods to override
     # --------------------------------------------------------------------------
 
@@ -246,7 +240,7 @@ class MinimalControllerTests(object):
 
     def move(self, w):
         s = self.supervisor
-        getattr(s.actions, 'move_%s' % w)()
+        getattr(s.actions, f'move_{w}')()
         s.block()
 
     def lasso(self, view, scale=1.0):
@@ -370,7 +364,7 @@ class BaseControllerTests(MinimalControllerTests):
         self.gui.view_actions.switch_raw_data_filter()
 
 
-class GlobalViewsTests(object):
+class GlobalViewsTests:
     def test_global_filter_1(self):
         self.next()
         cv = self.supervisor.cluster_view
@@ -561,7 +555,7 @@ class MockControllerFullTests(MinimalControllerTests, unittest.TestCase):
             self.qtbot.wait(200)
 
     def test_z2_open_all_views(self):
-        for view_cls in self.controller.view_creator.keys():
+        for view_cls in self.controller.view_creator:
             self.gui.create_and_add_view(view_cls)
             self.qtbot.wait(200)
 
@@ -570,7 +564,7 @@ class MockControllerFullTests(MinimalControllerTests, unittest.TestCase):
         self.next()
 
     def test_z4_open_new_views(self):
-        for view_cls in self.controller.view_creator.keys():
+        for view_cls in self.controller.view_creator:
             self.gui.create_and_add_view(view_cls)
             self.qtbot.wait(200)
 

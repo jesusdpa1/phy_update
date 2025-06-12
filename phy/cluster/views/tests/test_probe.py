@@ -5,13 +5,11 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
-from phylib.utils.geometry import staggered_positions
 from phylib.utils import emit
+from phylib.utils.geometry import staggered_positions
 
 from ..probe import ProbeView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test correlogram view
@@ -30,7 +28,7 @@ def test_probe_view(qtbot, gui):
     qtbot.waitForWindowShown(v.canvas)
     v.attach(gui)
 
-    class Supervisor(object):
+    class Supervisor:
         pass
 
     v.toggle_show_labels(True)

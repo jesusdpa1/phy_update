@@ -6,13 +6,12 @@
 
 import numpy as np
 from numpy.random import RandomState
-
 from phylib.utils import Bunch, connect, emit
 
 from phy.plot.tests import mouse_click
+
 from ..cluscatter import ClusterScatterView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test cluster scatter view
@@ -23,7 +22,7 @@ def test_cluster_scatter_view_1(qtbot, tempdir, gui):
     n_clusters = 1000
     cluster_ids = np.arange(n_clusters)[2::3]
 
-    class Supervisor(object):
+    class Supervisor:
         pass
 
     s = Supervisor()

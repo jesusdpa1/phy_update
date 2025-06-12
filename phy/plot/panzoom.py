@@ -9,18 +9,17 @@ import math
 import sys
 
 import numpy as np
-
-from .transform import Translate, Scale, pixels_to_ndc
+from phylib.utils import connect, emit
 from phylib.utils._types import _as_array
-from phylib.utils import emit, connect
 
+from .transform import Scale, Translate, pixels_to_ndc
 
 # ------------------------------------------------------------------------------
 # PanZoom class
 # ------------------------------------------------------------------------------
 
 
-class PanZoom(object):
+class PanZoom:
     """Pan and zoom interact. Support mouse and keyboard interactivity.
 
     Constructor
@@ -553,9 +552,7 @@ class PanZoom(object):
 
         canvas.gpu_transforms.add([self._translate, self._scale], origin=self)
         # Add the variable declarations.
-        vs = 'uniform vec2 {};\n'.format(self.pan_var_name) + 'uniform vec2 {};\n'.format(
-            self.zoom_var_name
-        )
+        vs = f"uniform vec2 {self.pan_var_name};\nuniform vec2 {self.zoom_var_name};\n"
         canvas.inserter.insert_vert(vs, 'header', origin=self)
 
         canvas.attach_events(self)

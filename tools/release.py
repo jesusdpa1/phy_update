@@ -1,4 +1,3 @@
-from __future__ import print_function
 
 """Automatic release tools."""
 
@@ -7,14 +6,13 @@ from __future__ import print_function
 # Imports
 # ------------------------------------------------------------------------------
 
-import sys
 import os
 import os.path as op
 import re
+import sys
 from subprocess import call
 
 from github3 import login
-
 
 # -----------------------------------------------------------------------------
 # Utilities
@@ -22,10 +20,7 @@ from github3 import login
 
 
 def _call(cmd, system=False):
-    if system:
-        ret = os.system(cmd)
-    else:
-        ret = call(cmd.split(' '))
+    ret = os.system(cmd) if system else call(cmd.split(' '))
     if ret != 0:
         raise RuntimeError()
 
@@ -45,7 +40,7 @@ def _path(fn):
 
 def _get_stable_version():
     fn = _path('phy/__init__.py')
-    with open(fn, 'r') as f:
+    with open(fn) as f:
         contents = f.read()
     m = re.search(_version_pattern, contents)
     return m.group(1)
@@ -66,7 +61,7 @@ def _update_version(dev_n='+1', dev=True):
             raise ValueError()
         return _version_replace.format(m.group(1), dev, n)
 
-    with open(fn, 'r') as f:
+    with open(fn) as f:
         contents = f.read()
 
     contents_new = re.sub(_version_pattern, func, contents)
@@ -94,11 +89,11 @@ def _set_final_version():
 
 def _create_gh_release():
     version = _get_stable_version()
-    name = 'Version {}'.format(version)
-    path = _path('dist/phy-{}.zip'.format(version))
+    name = f'Version {version}'
+    path = _path(f'dist/phy-{version}.zip')
     assert op.exists(path)
 
-    with open(_path('.github_credentials'), 'r') as f:
+    with open(_path('.github_credentials')) as f:
         user, pwd = f.read().strip().split(':')
     gh = login(user, pwd)
     phy = gh.repository('kwikteam', 'phy')
@@ -106,7 +101,7 @@ def _create_gh_release():
     if input('About to create a GitHub release: are you sure?') != 'yes':
         return
     release = phy.create_release(
-        'v' + version,
+        f"v{version}",
         name=name,
         # draft=False,
         # prerelease=False,
@@ -119,7 +114,7 @@ def _git_commit(message, push=False):
     assert message
     if input('About to git commit {}: are you sure?') != 'yes':
         return
-    _call('git commit -am "{}"'.format(message))
+    _call(f'git commit -am "{message}"')
     if push:
         if input('About to git push upstream master: are you sure?') != 'yes':
             return
@@ -171,7 +166,7 @@ def release():
     version = _get_stable_version()
     _set_final_version()
     _upload_pypi()
-    _git_commit('Release {}.'.format(version), push=True)
+    _git_commit(f'Release {version}.', push=True)
     _create_gh_release()
 
 

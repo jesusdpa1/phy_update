@@ -8,8 +8,7 @@ import time
 
 from pytest import mark
 
-from ..profiling import benchmark, _enable_profiler, _profile
-
+from ..profiling import _enable_profiler, _profile, benchmark
 
 # ------------------------------------------------------------------------------
 # Tests

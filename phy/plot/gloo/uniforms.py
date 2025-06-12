@@ -30,14 +30,8 @@ def dtype_reduce(dtype, level=0, depth=0):
 
     # No fields
     if fields is None:
-        if dtype.shape:
-            count = reduce(mul, dtype.shape)
-        else:
-            count = 1
-        if dtype.subdtype:
-            name = str(dtype.subdtype[0])
-        else:
-            name = str(dtype)
+        count = reduce(mul, dtype.shape) if dtype.shape else 1
+        name = str(dtype.subdtype[0]) if dtype.subdtype else str(dtype)
         return ['', count, name]
     else:
         items = []
@@ -49,7 +43,7 @@ def dtype_reduce(dtype, level=0, depth=0):
                 items.append([key, l[1], l[2]])
             else:
                 items.append(l)
-            name += key + ','
+            name += f"{key},"
 
         # Check if we can reduce item list
         ctype = None
@@ -197,16 +191,16 @@ class Uniforms(Texture2D):
         # Header generation (easy)
         types = {1: 'float', 2: 'vec2 ', 3: 'vec3 ', 4: 'vec4 ', 9: 'mat3 ', 16: 'mat4 '}
         for name, count, _ in _dtype:
-            header += 'varying %s %s%s;\n' % (types[count], prefix, name)
+            header += f'varying {types[count]} {prefix}{name};\n'
 
         # Body generation (not so easy)
         rows, cols = self.shape[0], self.shape[1]
         count = self._complete_count
 
-        body = """\nvoid fetch_uniforms(float index) {
-        float rows   = %.1f;
-        float cols   = %.1f;
-        float count  = %.1f;
+        body = f"""\nvoid fetch_uniforms(float index) {{
+        float rows   = {rows:.1f};
+        float cols   = {cols:.1f};
+        float count  = {count:.1f};
         int index_x  = int(mod(index, (floor(cols/(count/4.0))))) * int(count/4.0);
         int index_y  = int(floor(index / (floor(cols/(count/4.0)))));
         float size_x = cols - 1.0;
@@ -215,7 +209,7 @@ class Uniforms(Texture2D):
         if (size_y > 0.0)
             ty = float(index_y)/size_y;
         int i = index_x;
-        vec4 _uniform;\n""" % (rows, cols, count)
+        vec4 _uniform;\n"""
 
         _dtype = {name: count for name, count, _ in _dtype}
         store = 0
@@ -244,7 +238,7 @@ class Uniforms(Texture2D):
                     b = 'w'
 
                 i = min(min(len(b), count), len(a))
-                body += '    %s%s.%s = _uniforms.%s;\n' % (prefix, name, b[:i], a[:i])
+                body += f'    {prefix}{name}.{b[:i]} = _uniforms.{a[:i]};\n'
                 count -= i
                 shift += i
                 store -= i

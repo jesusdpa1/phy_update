@@ -12,7 +12,7 @@ from phylib.utils import Bunch
 
 from phy.apps.template import get_template_params
 from phy.cluster.views.trace import TraceView, select_traces
-from phy.gui import create_app, run_app, GUI
+from phy.gui import GUI, create_app, run_app
 
 logger = logging.getLogger(__name__)
 

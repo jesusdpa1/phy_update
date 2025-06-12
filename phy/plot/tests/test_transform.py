@@ -8,24 +8,23 @@
 from textwrap import dedent
 
 import numpy as np
-from numpy.testing import assert_equal as ae
 from numpy.testing import assert_allclose as ac
+from numpy.testing import assert_equal as ae
 from pytest import fixture
 
 from ..transform import (
-    _glslify,
-    pixels_to_ndc,
-    _normalize,
-    extend_bounds,
-    Translate,
-    Scale,
-    Rotate,
-    Range,
     Clip,
+    Range,
+    Rotate,
+    Scale,
     Subplot,
     TransformChain,
+    Translate,
+    _glslify,
+    _normalize,
+    extend_bounds,
+    pixels_to_ndc,
 )
-
 
 # ------------------------------------------------------------------------------
 # Fixtures

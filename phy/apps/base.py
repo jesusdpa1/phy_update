@@ -5,41 +5,40 @@
 # Imports
 # ------------------------------------------------------------------------------
 
-from functools import partial
 import inspect
 import logging
 import os
-from pathlib import Path
 import shutil
+from functools import partial
+from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, lfilter
-
 from phylib import _add_log_file
 from phylib.io.array import SpikeSelector, _flatten
 from phylib.stats import correlograms, firing_rate
-from phylib.utils import Bunch, emit, connect, unconnect
+from phylib.utils import Bunch, connect, emit, unconnect
 from phylib.utils._misc import write_tsv
+from scipy.signal import butter, lfilter
 
 from phy.cluster._utils import RotatingProperty
 from phy.cluster.supervisor import Supervisor
-from phy.cluster.views.base import ManualClusteringView, BaseColorView
 from phy.cluster.views import (
-    WaveformView,
-    FeatureView,
-    TraceView,
-    TraceImageView,
-    CorrelogramView,
     AmplitudeView,
-    ScatterView,
+    ClusterScatterView,
+    CorrelogramView,
+    FeatureView,
+    FiringRateView,
+    ISIView,
     ProbeView,
     RasterView,
+    ScatterView,
     TemplateView,
-    ISIView,
-    FiringRateView,
-    ClusterScatterView,
+    TraceImageView,
+    TraceView,
+    WaveformView,
     select_traces,
 )
+from phy.cluster.views.base import BaseColorView, ManualClusteringView
 from phy.cluster.views.trace import _iter_spike_waveforms
 from phy.gui import GUI
 from phy.gui.gui import _prompt_save
@@ -65,7 +64,7 @@ def _concatenate_parents_attributes(cls, name):
 
 class Selection(Bunch):
     def __init__(self, controller):
-        super(Selection, self).__init__()
+        super().__init__()
         self.controller = controller
 
     @property
@@ -78,7 +77,7 @@ class StatusBarHandler(logging.Handler):
 
     def __init__(self, gui):
         self.gui = gui
-        super(StatusBarHandler, self).__init__()
+        super().__init__()
 
     def emit(self, record):
         self.gui.status_message = self.format(record)
@@ -91,7 +90,7 @@ class StatusBarHandler(logging.Handler):
 
 class RawDataFilter(RotatingProperty):
     def __init__(self):
-        super(RawDataFilter, self).__init__()
+        super().__init__()
         self.add('raw', lambda x, axis=None: x)
 
     def add_default_filter(self, sample_rate):
@@ -132,7 +131,7 @@ class RawDataFilter(RotatingProperty):
 # ------------------------------------------------------------------------------
 
 
-class WaveformMixin(object):
+class WaveformMixin:
     n_spikes_waveforms = 100
     batch_size_waveforms = 10
 
@@ -241,7 +240,7 @@ class WaveformMixin(object):
         return b
 
     def _set_view_creator(self):
-        super(WaveformMixin, self)._set_view_creator()
+        super()._set_view_creator()
         self.view_creator['WaveformView'] = self.create_waveform_view
 
     def _get_waveforms_dict(self):
@@ -284,7 +283,7 @@ class WaveformMixin(object):
         return view
 
 
-class FeatureMixin(object):
+class FeatureMixin:
     n_spikes_features = 2500
     n_spikes_features_background = 2500
 
@@ -317,7 +316,7 @@ class FeatureMixin(object):
         return features[:, 0, pc or 0]
 
     def create_amplitude_view(self):
-        view = super(FeatureMixin, self).create_amplitude_view()
+        view = super().create_amplitude_view()
         if self.model.features is None:
             return view
 
@@ -430,11 +429,11 @@ class FeatureMixin(object):
         return view
 
     def _set_view_creator(self):
-        super(FeatureMixin, self)._set_view_creator()
+        super()._set_view_creator()
         self.view_creator['FeatureView'] = self.create_feature_view
 
 
-class TemplateMixin(object):
+class TemplateMixin:
     """Support templates.
 
     The model needs to implement specific properties and methods.
@@ -473,10 +472,10 @@ class TemplateMixin(object):
     )
 
     def __init__(self, *args, **kwargs):
-        super(TemplateMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _get_amplitude_functions(self):
-        out = super(TemplateMixin, self)._get_amplitude_functions()
+        out = super()._get_amplitude_functions()
         if getattr(self.model, 'template_features', None) is not None:
             out['template_feature'] = self.get_spike_template_features
         return out
@@ -513,7 +512,7 @@ class TemplateMixin(object):
 
     def _set_cluster_metrics(self):
         """Add an amplitude column in the cluster view."""
-        super(TemplateMixin, self)._set_cluster_metrics()
+        super()._set_cluster_metrics()
         self.cluster_metrics['amp'] = self.get_cluster_amplitude
 
     def get_spike_template_amplitudes(self, spike_ids, **kwargs):
@@ -589,7 +588,7 @@ class TemplateMixin(object):
         return out
 
     def _set_view_creator(self):
-        super(TemplateMixin, self)._set_view_creator()
+        super()._set_view_creator()
         self.view_creator['TemplateView'] = self.create_template_view
 
     def create_template_view(self):
@@ -604,7 +603,7 @@ class TemplateMixin(object):
         return view
 
 
-class TraceMixin(object):
+class TraceMixin:
     _new_views = ('TraceView', 'TraceImageView')
     waveform_duration = 1.0  # in milliseconds
 
@@ -710,7 +709,7 @@ class TraceMixin(object):
         return view
 
     def _set_view_creator(self):
-        super(TraceMixin, self)._set_view_creator()
+        super()._set_view_creator()
         self.view_creator['TraceView'] = self.create_trace_view
         self.view_creator['TraceImageView'] = self.create_trace_image_view
 
@@ -720,7 +719,7 @@ class TraceMixin(object):
 # ------------------------------------------------------------------------------
 
 
-class BaseController(object):
+class BaseController:
     """Base controller for manual clustering GUI.
 
     Constructor
@@ -939,8 +938,8 @@ class BaseController(object):
         self.attached_plugins = attach_plugins(
             self,
             config_dir=config_dir,
-            plugins=kwargs.get('plugins', None),
-            dirs=kwargs.get('plugin_dirs', None),
+            plugins=kwargs.get('plugins'),
+            dirs=kwargs.get('plugin_dirs'),
         )
 
         # Cache the methods specified in self._memcached and self._cached. All method names
@@ -1002,7 +1001,7 @@ class BaseController(object):
         }
         # Spike attributes.
         for name, arr in getattr(self.model, 'spike_attributes', {}).items():
-            view_name = 'Spike%sView' % name.title()
+            view_name = f'Spike{name.title()}View'
             self.view_creator[view_name] = self._make_spike_attributes_view(view_name, name, arr)
 
     def _set_cluster_metrics(self):
@@ -1813,7 +1812,7 @@ class BaseController(object):
             # to be saved in the data directory.
             for view in gui.views:
                 local_keys = getattr(view, 'local_state_attrs', [])
-                local_keys = ['%s.%s' % (view.name, key) for key in local_keys]
+                local_keys = [f'{view.name}.{key}' for key in local_keys]
                 gui.state.add_local_keys(local_keys)
 
             # Update the controller params in the GUI state.

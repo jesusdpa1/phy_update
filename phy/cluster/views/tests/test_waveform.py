@@ -6,15 +6,14 @@
 
 import numpy as np
 from numpy.testing import assert_allclose as ac
-
 from phylib.io.mock import artificial_waveforms
 from phylib.utils import Bunch, connect
 from phylib.utils.geometry import staggered_positions
-from phy.plot.tests import mouse_click, key_press, key_release
+
+from phy.plot.tests import key_press, key_release, mouse_click
 
 from ..waveform import WaveformView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test waveform view

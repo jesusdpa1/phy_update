@@ -6,17 +6,18 @@
 
 import logging
 
+from phylib.utils import connect, emit, unconnect
 from pytest import raises
 
-from ..qt import Qt, QApplication, QWidget, QMessageBox
+from phy.plot import BaseCanvas
+
 from ..gui import (
     GUI,
     Actions,
     _try_get_matplotlib_canvas,
     _try_get_opengl_canvas,
 )
-from phy.plot import BaseCanvas
-from phylib.utils import connect, unconnect, emit
+from ..qt import QApplication, QMessageBox, Qt, QWidget
 
 logger = logging.getLogger(__name__)
 
@@ -43,15 +44,15 @@ def test_matplotlib_view():
     assert isinstance(_try_get_matplotlib_canvas(Figure()), QWidget)
     assert isinstance(_try_get_opengl_canvas(Figure()), Figure)
 
-    class MyFigure(object):
+    class MyFigure:
         figure = Figure()
 
     assert isinstance(_try_get_matplotlib_canvas(MyFigure()), QWidget)
 
-    class Canvas(object):
+    class Canvas:
         figure = Figure()
 
-    class MyFigure(object):
+    class MyFigure:
         canvas = Canvas()
 
     assert isinstance(_try_get_matplotlib_canvas(MyFigure()), QWidget)
@@ -63,7 +64,7 @@ def test_opengl_view():
     assert isinstance(_try_get_opengl_canvas(BaseCanvas()), QWidget)
     assert isinstance(_try_get_matplotlib_canvas(BaseCanvas()), BaseCanvas)
 
-    class MyFigure(object):
+    class MyFigure:
         canvas = BaseCanvas()
 
     assert isinstance(_try_get_opengl_canvas(MyFigure()), QWidget)
@@ -134,7 +135,7 @@ def test_gui_1(tempdir, qtbot):
 def test_gui_creator(tempdir, qtbot):
     class MyCanvas(BaseCanvas):
         def __init__(self, *args, **kwargs):
-            super(MyCanvas, self).__init__(*args, **kwargs)
+            super().__init__(*args, **kwargs)
             self.actions = Actions(gui, menu='MyCanvas', name='actions')
 
         def attach(self, gui):
@@ -224,7 +225,7 @@ def test_gui_dock_widget_1(qtbot, gui):
     assert v.dock.status == 'this is a status'
 
     # Set and check the title bar status text.
-    v.dock.set_status('---very long---' + '------' * 10)
+    v.dock.set_status(f"---very long---{'------' * 10}")
     assert len(v.dock.status) <= v.dock.max_status_length + 5
 
     b2.click()

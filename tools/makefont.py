@@ -19,10 +19,10 @@ from pathlib import Path
 import imageio
 import numpy as np
 
-from phy.plot.visuals import FONT_MAP_SIZE, FONT_MAP_PATH, SDF_SIZE, FONT_MAP_CHARS, GLYPH_SIZE
+from phy.plot.visuals import FONT_MAP_CHARS, FONT_MAP_PATH, FONT_MAP_SIZE, GLYPH_SIZE, SDF_SIZE
 
 
-class FontMapGenerator(object):
+class FontMapGenerator:
     """Generate a SDF font map for a monospace font, with a given uniform glyph size."""
 
     def __init__(self):

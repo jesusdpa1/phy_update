@@ -9,7 +9,6 @@ from pytest import fixture
 from ..actions import Actions, Snippets
 from ..gui import GUI
 
-
 # ------------------------------------------------------------------------------
 # Utilities and fixtures
 # ------------------------------------------------------------------------------

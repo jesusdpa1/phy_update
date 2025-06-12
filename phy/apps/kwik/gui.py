@@ -6,20 +6,20 @@
 # ------------------------------------------------------------------------------
 
 import logging
-from pathlib import Path
 import shutil
+from pathlib import Path
 from tempfile import TemporaryDirectory
 
 import numpy as np
-
 from phylib.stats.clusters import get_waveform_amplitude
 from phylib.utils import Bunch, connect
 from phylib.utils.geometry import linear_positions
 
-from phy.utils.context import Context
-from phy.gui import create_app, run_app
-from ..base import WaveformMixin, FeatureMixin, TraceMixin, BaseController
 from phy.cluster.supervisor import Supervisor
+from phy.gui import create_app, run_app
+from phy.utils.context import Context
+
+from ..base import BaseController, FeatureMixin, TraceMixin, WaveformMixin
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ except ImportError:  # pragma: no cover
 def _backup(path):
     """Backup a file."""
     assert path.exists()
-    path_backup = str(path) + '.bak'
+    path_backup = f"{str(path)}.bak"
     if not Path(path_backup).exists():
         logger.info('Backup `%s`.', path_backup)
         shutil.copy(str(path), str(path_backup))
@@ -99,9 +99,9 @@ class KwikController(WaveformMixin, FeatureMixin, TraceMixin, BaseController):
         assert kwik_path
         kwik_path = Path(kwik_path)
         dir_path = kwik_path.parent
-        self.channel_group = kwargs.get('channel_group', None)
-        self.clustering = kwargs.get('clustering', None)
-        super(KwikController, self).__init__(kwik_path=kwik_path, dir_path=dir_path, **kwargs)
+        self.channel_group = kwargs.get('channel_group')
+        self.clustering = kwargs.get('clustering')
+        super().__init__(kwik_path=kwik_path, dir_path=dir_path, **kwargs)
 
     # Internal methods
     # -------------------------------------------------------------------------

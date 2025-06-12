@@ -5,14 +5,12 @@
 # ------------------------------------------------------------------------------
 
 import logging
-import numpy as np
 import warnings
 
 import matplotlib
-
+import numpy as np
 from phylib import add_default_handler
 from phylib.conftest import *  # noqa
-
 
 # ------------------------------------------------------------------------------
 # Common fixtures
@@ -32,7 +30,9 @@ np.random.seed(2019)
 
 def pytest_addoption(parser):
     """Repeat option."""
-    parser.addoption('--repeat', action='store', help='Number of times to repeat each test')
+    parser.addoption(
+        '--repeat', action='store', help='Number of times to repeat each test'
+    )
 
 
 def pytest_generate_tests(metafunc):  # pragma: no cover

@@ -1,21 +1,22 @@
+
 """Qt utilities."""
 
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 
-from contextlib import contextmanager
-from datetime import datetime
-from functools import wraps, partial
 import logging
 import os
 import os.path as op
-from pathlib import Path
 import shutil
 import sys
 import tempfile
-from timeit import default_timer
 import traceback
+from contextlib import contextmanager
+from datetime import datetime
+from functools import partial, wraps
+from pathlib import Path
+from timeit import default_timer
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +36,6 @@ from PyQt5.QtCore import (
     QObject,  # noqa
     QVariant,
     QEventLoop,
-    QTimer,
     QPoint,
     QTimer,
     QThreadPool,
@@ -235,8 +235,9 @@ def _wait(ms):
 
 def _debug_trace():  # pragma: no cover
     """Set a tracepoint in the Python debugger that works with Qt."""
-    from PyQt5.QtCore import pyqtRemoveInputHook
     from pdb import set_trace
+
+    from PyQt5.QtCore import pyqtRemoveInputHook
 
     pyqtRemoveInputHook()
     set_trace()
@@ -363,7 +364,7 @@ def screenshot_default_path(widget, dir=None):
     from phylib.utils._misc import phy_config_dir
 
     date = datetime.now().strftime('%Y%m%d%H%M%S')
-    name = 'phy_screenshot_%s_%s.png' % (date, widget.__class__.__name__)
+    name = f'phy_screenshot_{date}_{widget.__class__.__name__}.png'
     path = (Path(dir) if dir else phy_config_dir() / 'screenshots') / name
     path.parent.mkdir(exist_ok=True, parents=True)
     return path
@@ -421,7 +422,7 @@ def _get_icon(icon, size=64, color='black'):
     # from https://github.com/Pythonity/icon-font-to-png/blob/master/icon_font_to_png/icon_font.py
     static_dir = op.join(op.dirname(op.abspath(__file__)), 'static/icons/')
     ttf_file = op.abspath(op.join(static_dir, '../fa-solid-900.ttf'))
-    output_path = op.join(static_dir, icon + '.png')
+    output_path = op.join(static_dir, f'{icon}.png')
 
     if not op.exists(output_path):  # pragma: no cover
         # Ideally, this should only run on the developer's machine.
@@ -438,7 +439,10 @@ def _get_icon(icon, size=64, color='black'):
         width, height = draw.textsize(hex_icon, font=font)
 
         draw.text(
-            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=color
+            (float(size - width) / 2, float(size - height) / 2),
+            hex_icon,
+            font=font,
+            fill=color,
         )
 
         # Get bounding box
@@ -450,7 +454,10 @@ def _get_icon(icon, size=64, color='black'):
 
         # Draw the icon on the mask
         draw_mask.text(
-            (float(size - width) / 2, float(size - height) / 2), hex_icon, font=font, fill=255
+            (float(size - width) / 2, float(size - height) / 2),
+            hex_icon,
+            font=font,
+            fill=255,
         )
 
         # Create a solid color image and apply the mask
@@ -495,7 +502,7 @@ class WebPage(QWebEnginePage):
     _raise_on_javascript_error = False
 
     def javaScriptConsoleMessage(self, level, msg, line, source):
-        super(WebPage, self).javaScriptConsoleMessage(level, msg, line, source)
+        super().javaScriptConsoleMessage(level, msg, line, source)
         msg = '[JS:L%02d] %s' % (line, msg)
         f = (partial(logger.log, 5), logger.warning, logger.error)[level]
         if self._raise_on_javascript_error and level >= 2:
@@ -507,7 +514,7 @@ class WebView(QWebEngineView):
     """A generic HTML widget."""
 
     def __init__(self, *args):
-        super(WebView, self).__init__(*args)
+        super().__init__(*args)
         self.html = None
         assert isinstance(self.window(), QWidget)
         self._page = WebPage(self)
@@ -519,7 +526,7 @@ class WebView(QWebEngineView):
         """Set the HTML code."""
         self._callback = callback
         self.loadFinished.connect(self._loadFinished)
-        static_dir = str(Path(__file__).parent / 'static') + '/'
+        static_dir = f'{str(Path(__file__).parent / "static")}/'
 
         # Create local file from HTML
         self.clear_temporary_files()
@@ -586,7 +593,7 @@ class Worker(QRunnable):
     """
 
     def __init__(self, fn, *args, **kwargs):
-        super(Worker, self).__init__()
+        super().__init__()
         self.fn = fn
         self.args = args
         self.kwargs = kwargs
@@ -610,7 +617,7 @@ class Worker(QRunnable):
             self.signals.finished.emit()
 
 
-class Debouncer(object):
+class Debouncer:
     """Debouncer to work in a Qt application.
 
     Jobs are submitted at given times. They are executed immediately if the
@@ -647,7 +654,9 @@ class Debouncer(object):
     def __init__(self, delay=None):
         self.delay = delay or self.delay  # minimum delay between job executions, in ms.
         self._last_submission_time = 0
-        self.is_waiting = False  # whether we're already waiting for the end of the interactions
+        self.is_waiting = (
+            False  # whether we're already waiting for the end of the interactions
+        )
         self.pending_functions = {}  # assign keys to pending functions.
         self._timer = QTimer()
         self._timer.timeout.connect(self._timer_callback)
@@ -696,7 +705,7 @@ class Debouncer(object):
         self._last_submission_time = default_timer() - (self.delay * 0.001 - delay)
 
 
-class AsyncCaller(object):
+class AsyncCaller:
     """Call a Python function after a delay."""
 
     def __init__(self, delay=10):

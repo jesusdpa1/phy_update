@@ -2,11 +2,10 @@
 
 import numpy as np
 
-from phy.utils.color import selected_cluster_color
-
 from phy import IPlugin
 from phy.cluster.views import ManualClusteringView
 from phy.plot.visuals import PlotVisual
+from phy.utils.color import selected_cluster_color
 
 
 class MyOpenGLView(ManualClusteringView):
@@ -19,7 +18,7 @@ class MyOpenGLView(ManualClusteringView):
         the data as NumPy arrays. Many such functions are defined in the TemplateController.
         """
 
-        super(MyOpenGLView, self).__init__()
+        super().__init__()
 
         """
         The View instance contains a special `canvas` object which is a `̀PlotCanvas` instance.

@@ -5,13 +5,13 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
+from phylib.utils import Bunch
 from pytest import raises
 
-from phylib.utils import Bunch
 from phy.plot.tests import mouse_click
+
 from ..scatter import ScatterView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test scatter view

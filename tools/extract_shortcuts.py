@@ -1,13 +1,13 @@
-from pathlib import Path
 import re
+from pathlib import Path
+
+from phylib.utils.testing import captured_output
 
 from phy.apps.base import BaseController
 from phy.cluster import views
 from phy.cluster.supervisor import ActionCreator
-from phy.gui.actions import _show_shortcuts, _show_snippets
 from phy.gui import GUI
-from phylib.utils.testing import captured_output
-
+from phy.gui.actions import _show_shortcuts, _show_snippets
 
 # Get a mapping view class : list of keyboard shortcuts
 
@@ -46,7 +46,7 @@ for file in files:
         j = m.end(2)
         contents = contents[:i] + shortcuts + contents[j:]
         file.write_text(contents)
-        print('Inserted shortcuts for %s in %s.' % (view_name, file))
+        print(f'Inserted shortcuts for {view_name} in {file}.')
 
 
 # All shortcuts
@@ -69,4 +69,4 @@ i = m.start(1)
 j = m.end(1)
 contents = contents[:i] + all_shortcuts + contents[j:]
 shortcuts_file.write_text(contents)
-print('Inserted all shortcuts in %s.' % shortcuts_file)
+print(f'Inserted all shortcuts in {shortcuts_file}.')

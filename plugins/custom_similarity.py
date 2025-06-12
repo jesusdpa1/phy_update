@@ -1,6 +1,7 @@
 """Show how to add a custom similarity measure."""
 
 from operator import itemgetter
+
 import numpy as np
 
 from phy import IPlugin

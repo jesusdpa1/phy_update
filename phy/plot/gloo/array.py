@@ -23,10 +23,9 @@ import logging
 import numpy as np
 
 from . import gl
-from .gpudata import GPUData
-from .globject import GLObject
 from .buffer import VertexBuffer
-
+from .globject import GLObject
+from .gpudata import GPUData
 
 log = logging.getLogger(__name__)
 

@@ -4,35 +4,34 @@
 # Imports
 # ------------------------------------------------------------------------------
 
+from phylib.utils.testing import captured_logging
 from pytest import raises
 
-from phylib.utils.testing import captured_logging
 from ..qt import (
+    AsyncCaller,
+    Debouncer,
+    QApplication,
     QMessageBox,
     Qt,
-    QWebEngineView,
     QTimer,
-    _button_name_from_enum,
-    _button_enum_from_name,
-    prompt,
-    screen_size,
-    is_high_dpi,
-    _wait_signal,
-    require_qt,
-    create_app,
-    QApplication,
+    QWebEngineView,
     WebView,
-    busy_cursor,
-    AsyncCaller,
-    _wait,
     Worker,
     _block,
+    _button_enum_from_name,
+    _button_name_from_enum,
+    _wait,
+    _wait_signal,
+    busy_cursor,
+    create_app,
+    is_high_dpi,
+    prompt,
+    require_qt,
+    screen_size,
     screenshot,
     screenshot_default_path,
-    Debouncer,
     thread_pool,
 )
-
 
 # ------------------------------------------------------------------------------
 # Tests
@@ -158,7 +157,7 @@ def test_web_view(qtbot):
     view = WebView()
 
     def _assert(text):
-        return view.html == '<html><head></head><body>%s</body></html>' % text
+        return view.html == f'<html><head></head><body>{text}</body></html>'
 
     view.set_html('hello', _assert)
     qtbot.addWidget(view)

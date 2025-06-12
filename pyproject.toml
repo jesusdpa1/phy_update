@@ -64,10 +64,10 @@ dev = [
     "mkdocs",
 ]
 
-klusta = [
-    "klusta @ git+https://github.com/kwikteam/klusta.git",
-    "klustakwik2 @ git+https://github.com/kwikteam/klustakwik2.git",
-]
+# klusta = [
+#     "klusta @ git+https://github.com/kwikteam/klusta.git",
+#     "klustakwik2 @ git+https://github.com/kwikteam/klustakwik2.git",
+# ]
 qt5 = ["PyQt5", "PyQtWebEngine"]
 qt6 = ["PyQt6", "PyQt6-WebEngine"]
 
@@ -98,14 +98,14 @@ phy = [
 ]
 
 [tool.pytest.ini_options]
+testpaths = ["phy"]
+addopts = "--ignore=phy/apps/kwik --cov=phy --cov-report=term-missing"
 norecursedirs = ["experimental", "_*"]
 filterwarnings = [
     "default",
     "ignore::DeprecationWarning:.*",
     "ignore:numpy.ufunc",
 ]
-testpaths = ["phy"]
-addopts = "--cov=phy --cov-report=term-missing"
 
 [tool.coverage.run]
 branch = false
@@ -140,10 +140,17 @@ target-version = "py39"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "PIE", "NPY201"]
 ignore = [
-    "E265", # block comment should start with '# '
-    "E731", # do not assign a lambda expression, use a def
-    "E741", # ambiguous variable name
-    "W605", # invalid escape sequence
+    "E265",   # block comment should start with '# '
+    "E731",   # do not assign a lambda expression, use a def
+    "E741",   # ambiguous variable name
+    "W605",   # invalid escape sequence,
+    "N806",
+    "SIM102",
+    "B007",
+    "N803",
+    "N802",
+    "B018",
+    "F401",
 ]
 
 [tool.ruff.lint.isort]

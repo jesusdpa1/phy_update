@@ -4,9 +4,9 @@
 # Imports
 # ------------------------------------------------------------------------------
 
+from phylib.io.array import get_closest_clusters
 from pytest import fixture
 
-from phylib.io.array import get_closest_clusters
 import phy.gui.qt
 
 # Reduce the debouncer delay for tests.

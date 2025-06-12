@@ -7,24 +7,22 @@
 import colorcet as cc
 import numpy as np
 from numpy.testing import assert_almost_equal as ae
-
 from pytest import raises
 
 from ..color import (
-    _is_bright,
-    _random_bright_color,
-    spike_colors,
-    add_alpha,
-    selected_cluster_color,
-    _override_hsv,
-    _hex_to_triplet,
-    _continuous_colormap,
-    _categorical_colormap,
-    _selected_cluster_idx,
     ClusterColorSelector,
     _add_selected_clusters_colors,
+    _categorical_colormap,
+    _continuous_colormap,
+    _hex_to_triplet,
+    _is_bright,
+    _override_hsv,
+    _random_bright_color,
+    _selected_cluster_idx,
+    add_alpha,
+    selected_cluster_color,
+    spike_colors,
 )
-
 
 # ------------------------------------------------------------------------------
 # Tests

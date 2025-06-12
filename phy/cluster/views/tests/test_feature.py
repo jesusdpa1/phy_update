@@ -6,15 +6,14 @@
 
 import numpy as np
 import pytest
-
 from phylib.io.array import _spikes_per_cluster
 from phylib.io.mock import artificial_features, artificial_spike_clusters
 from phylib.utils import Bunch, connect
+
 from phy.plot.tests import mouse_click
 
 from ..feature import FeatureView, _get_default_grid
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test feature view
@@ -34,10 +33,7 @@ def test_feature_view(qtbot, gui, n_channels):
         return spc[cluster_id] if cluster_id is not None else np.arange(ns)
 
     def get_features(cluster_id=None, channel_ids=None, spike_ids=None, load_all=None):
-        if load_all:
-            spike_ids = spc[cluster_id]
-        else:
-            spike_ids = get_spike_ids(cluster_id)
+        spike_ids = spc[cluster_id] if load_all else get_spike_ids(cluster_id)
         return Bunch(
             data=features[spike_ids],
             spike_ids=spike_ids,
@@ -81,7 +77,7 @@ def test_feature_view(qtbot, gui, n_channels):
     def on_select_feature(sender, dim=None, channel_id=None, pc=None):
         _l.append((dim, channel_id, pc))
 
-    for i, j, dim_x, dim_y in v._iter_subplots():
+    for i, j, _dim_x, _dim_y in v._iter_subplots():
         for k, button in enumerate(('Left', 'Right')):
             # Click on the center of every subplot.
             w, h = v.canvas.get_size()

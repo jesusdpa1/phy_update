@@ -5,18 +5,18 @@
 # ------------------------------------------------------------------------------
 
 import logging
-from pathlib import Path
 import re
 import unittest
+from pathlib import Path
 
 import numpy as np
-
-from phylib.io.model import load_model, get_template_params
+from phylib.io.model import get_template_params, load_model
 from phylib.io.tests.conftest import _make_dataset
 from phylib.utils.testing import captured_output
 
-from phy.apps.tests.test_base import MinimalControllerTests, BaseControllerTests, GlobalViewsTests
-from ..gui import template_describe, TemplateController, TemplateFeatureView
+from phy.apps.tests.test_base import BaseControllerTests, GlobalViewsTests, MinimalControllerTests
+
+from ..gui import TemplateController, TemplateFeatureView, template_describe
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class TemplateControllerTests(GlobalViewsTests, BaseControllerTests):
     def test_spike_attribute_views(self):
         """Open all available spike attribute views."""
         view_names = [
-            name for name in self.controller.view_creator.keys() if name.startswith('Spike')
+            name for name in self.controller.view_creator if name.startswith('Spike')
         ]
         for name in view_names:
             self.gui.create_and_add_view(name)
@@ -123,7 +123,7 @@ class TemplateControllerDenseTests(TemplateControllerTests, unittest.TestCase):
         self.assertTrue(np.all(self.supervisor.clustering.spike_clusters == spike_clusters))
 
         # Check the label.
-        for cl, val in self.model.metadata[self.__class__._label_name].items():
+        for _cl, val in self.model.metadata[self.__class__._label_name].items():
             self.assertEqual(val, self.__class__._label_value)
 
 
@@ -220,4 +220,4 @@ def _make_plugin_test_case(plugin_name):
 
 # Dynamically define test classes for each builtin plugin.
 for plugin_name in plugin_names():
-    globals()['TemplateController%sTests' % plugin_name] = _make_plugin_test_case(plugin_name)
+    globals()[f'TemplateController{plugin_name}Tests'] = _make_plugin_test_case(plugin_name)

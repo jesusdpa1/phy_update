@@ -8,14 +8,14 @@
 import logging
 
 import numpy as np
-
-from phy.utils.color import _add_selected_clusters_colors
 from phylib.io.array import _index_of
-from phylib.utils import emit, Bunch
+from phylib.utils import Bunch, emit
 
 from phy.plot import get_linear_x
 from phy.plot.visuals import PlotVisual
-from .base import ManualClusteringView, BaseGlobalView, ScalingMixin, BaseColorView
+from phy.utils.color import _add_selected_clusters_colors
+
+from .base import BaseColorView, BaseGlobalView, ManualClusteringView, ScalingMixin
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class TemplateView(ScalingMixin, BaseColorView, BaseGlobalView, ManualClustering
     def __init__(
         self, templates=None, channel_ids=None, channel_labels=None, cluster_ids=None, **kwargs
     ):
-        super(TemplateView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += ()
         self.local_state_attrs += ('scaling',)
 
@@ -173,7 +173,7 @@ class TemplateView(ScalingMixin, BaseColorView, BaseGlobalView, ManualClustering
         # Update the permutation of the clusters.
         self.cluster_idxs = np.argsort(self.all_cluster_ids)
         box_index = []
-        for cluster_rel, cluster_idx in enumerate(self.cluster_idxs):
+        for _cluster_rel, cluster_idx in enumerate(self.cluster_idxs):
             cluster_id = self.all_cluster_ids[cluster_idx]
             clu_box_index = self._cluster_box_index[cluster_id]
             clu_box_index[:, 1] = cluster_idx
@@ -207,7 +207,7 @@ class TemplateView(ScalingMixin, BaseColorView, BaseGlobalView, ManualClustering
 
     @property
     def status(self):
-        return 'Color scheme: %s' % self.color_schemes.current
+        return f'Color scheme: {self.color_schemes.current}'
 
     def plot(self, **kwargs):
         """Make the template plot."""
@@ -232,7 +232,7 @@ class TemplateView(ScalingMixin, BaseColorView, BaseGlobalView, ManualClustering
         self.canvas.update()
 
     def on_select(self, *args, **kwargs):
-        super(TemplateView, self).on_select(*args, **kwargs)
+        super().on_select(*args, **kwargs)
         self.update_color()
 
     # Scaling

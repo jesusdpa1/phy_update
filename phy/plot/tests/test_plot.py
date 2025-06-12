@@ -11,10 +11,10 @@ import numpy as np
 from pytest import fixture
 
 from phy.gui import GUI
+
 from ..plot import PlotCanvas, PlotCanvasMpl
 from ..utils import get_linear_x
 from ..visuals import PlotVisual, TextVisual
-
 
 # ------------------------------------------------------------------------------
 # Fixtures

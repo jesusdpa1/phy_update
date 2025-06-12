@@ -6,13 +6,13 @@
 # ------------------------------------------------------------------------------
 
 import logging
-import numpy as np
 
+import numpy as np
 from phylib.utils import emit
-from phylib.utils.geometry import get_non_overlapping_boxes, get_closest_box
+from phylib.utils.geometry import get_closest_box, get_non_overlapping_boxes
 
 from .base import BaseLayout
-from .transform import Scale, Range, Subplot, Clip, NDC
+from .transform import NDC, Clip, Range, Scale, Subplot
 from .utils import _get_texture, _in_polygon
 from .visuals import LineVisual, PolygonVisual
 
@@ -53,7 +53,7 @@ class Grid(BaseLayout):
     _scaling = (1.0, 1.0)
 
     def __init__(self, shape=(1, 1), shape_var='u_grid_shape', box_var=None, has_clip=True):
-        super(Grid, self).__init__(box_var=box_var)
+        super().__init__(box_var=box_var)
         self.shape_var = shape_var
         self._shape = shape
         ms = 1 - self.margin
@@ -80,14 +80,14 @@ class Grid(BaseLayout):
 
     def attach(self, canvas):
         """Attach the grid to a canvas."""
-        super(Grid, self).attach(canvas)
+        super().attach(canvas)
         canvas.gpu_transforms += self.gpu_transforms
         canvas.inserter.insert_vert(
-            """
-            attribute vec2 {};
-            uniform vec2 {};
+            f"""
+            attribute vec2 {self.box_var};
+            uniform vec2 {self.shape_var};
             uniform vec2 u_grid_scaling;
-            """.format(self.box_var, self.shape_var),
+            """,
             'header',
             origin=self,
         )
@@ -135,7 +135,7 @@ class Grid(BaseLayout):
 
     def update_visual(self, visual):
         """Update a visual."""
-        super(Grid, self).update_visual(visual)
+        super().update_visual(visual)
         if self.shape_var in visual.program:
             visual.program[self.shape_var] = self._shape
             visual.program['u_grid_scaling'] = self._scaling
@@ -198,7 +198,7 @@ class Boxed(BaseLayout):
     _scaling_param_increment = 1.1
 
     def __init__(self, box_pos=None, box_var=None, keep_aspect_ratio=False):
-        super(Boxed, self).__init__(box_var=box_var)
+        super().__init__(box_var=box_var)
         self._key_pressed = None
         self.keep_aspect_ratio = keep_aspect_ratio
 
@@ -215,35 +215,35 @@ class Boxed(BaseLayout):
 
     def attach(self, canvas):
         """Attach the boxed interact to a canvas."""
-        super(Boxed, self).attach(canvas)
+        super().attach(canvas)
         canvas.gpu_transforms += self.gpu_transforms
         canvas.inserter.insert_vert(
-            """
+            f"""
             #include "utils.glsl"
-            attribute float {};
+            attribute float {self.box_var};
             uniform sampler2D u_box_pos;
             uniform float n_boxes;
             uniform vec2 u_box_size;
             uniform vec2 u_layout_scaling;
-            """.format(self.box_var),
+            """,
             'header',
             origin=self,
         )
         canvas.inserter.insert_vert(
-            """
+            f"""
             // Fetch the box bounds for the current box (`box_var`).
-            vec2 box_pos = fetch_texture({}, u_box_pos, n_boxes).xy;
+            vec2 box_pos = fetch_texture({self.box_var}, u_box_pos, n_boxes).xy;
             box_pos = (2 * box_pos - 1);  // from [0, 1] (texture) to [-1, 1] (NDC)
             box_pos = box_pos * u_layout_scaling;
             vec4 box_bounds = vec4(box_pos - u_box_size, box_pos + u_box_size);
-            """.format(self.box_var),
+            """,
             'start',
             origin=self,
         )
 
     def update_visual(self, visual):
         """Update a visual."""
-        super(Boxed, self).update_visual(visual)
+        super().update_visual(visual)
         box_pos = _get_texture(self.box_pos, (0, 0), self.n_boxes, [-1, 1])
         box_pos = box_pos.astype(np.float32)
         if 'u_box_pos' in visual.program:
@@ -373,7 +373,7 @@ class Stacked(Boxed):
         self._origin = origin or self._origin
         assert self._origin in ('top', 'bottom')
         box_pos = self.get_box_pos(n_boxes)
-        super(Stacked, self).__init__(box_pos, box_var=box_var, keep_aspect_ratio=False)
+        super().__init__(box_pos, box_var=box_var, keep_aspect_ratio=False)
 
     @property
     def n_boxes(self):
@@ -411,22 +411,22 @@ class Stacked(Boxed):
         BaseLayout.attach(self, canvas)
         canvas.gpu_transforms += self.gpu_transforms
         canvas.inserter.insert_vert(
-            """
+            f"""
             #include "utils.glsl"
-            attribute float {};
+            attribute float {self.box_var};
             uniform float n_boxes;
             uniform bool u_top_origin;
             uniform vec2 u_box_size;
-            """.format(self.box_var),
+            """,
             'header',
             origin=self,
         )
         canvas.inserter.insert_vert(
-            """
+            f"""
             float margin = .1 / n_boxes;
             float a = 1 - 2. / n_boxes + margin;
             float b = -1 + 2. / n_boxes - margin;
-            float u = (u_top_origin ? (n_boxes - 1. - {bv}) : {bv}) / max(1., n_boxes - 1.);
+            float u = (u_top_origin ? (n_boxes - 1. - {self.box_var}) : {self.box_var}) / max(1., n_boxes - 1.);
             float y0 = -1 + u * (a + 1);
             float y1 = b + u * (1 - b);
             float ym = .5 * (y0 + y1);
@@ -434,7 +434,7 @@ class Stacked(Boxed):
             y0 = ym - yh;
             y1 = ym + yh;
             vec4 box_bounds = vec4(-1., y0, +1., y1);
-        """.format(bv=self.box_var),
+        """,
             'before_transforms',
             origin=self,
         )
@@ -453,7 +453,7 @@ class Stacked(Boxed):
 # ------------------------------------------------------------------------------
 
 
-class Lasso(object):
+class Lasso:
     """Draw a polygon with the mouse and find the points that belong to the inside of the
     polygon."""
 

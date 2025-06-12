@@ -7,12 +7,12 @@
 import logging
 
 import numpy as np
-
+from phylib.io.array import _spikes_in_clusters, _spikes_per_cluster, _unique
 from phylib.utils._types import _as_array, _is_array_like
-from phylib.io.array import _unique, _spikes_in_clusters, _spikes_per_cluster
-from ._utils import UpdateInfo
-from ._history import History
 from phylib.utils.event import emit
+
+from ._history import History
+from ._utils import UpdateInfo
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +95,7 @@ def _assign_update_info(spike_ids, old_spike_clusters, new_spike_clusters):
     return update_info
 
 
-class Clustering(object):
+class Clustering:
     """Handle cluster changes in a set of spikes.
 
     Constructor
@@ -140,7 +140,7 @@ class Clustering(object):
     """
 
     def __init__(self, spike_clusters, new_cluster_id=None, spikes_per_cluster=None):
-        super(Clustering, self).__init__()
+        super().__init__()
         self._undo_stack = History(base_item=(None, None, None))
         # Spike -> cluster mapping.
         self._spike_clusters = _as_array(spike_clusters)
@@ -329,7 +329,7 @@ class Clustering(object):
             to = self.new_cluster_id()
         if to < self.new_cluster_id():
             raise ValueError(
-                'The new cluster numbers should be higher than {0}.'.format(self.new_cluster_id())
+                f'The new cluster numbers should be higher than {self.new_cluster_id()}.'
             )
 
         # NOTE: we could have called self.assign() here, but we don't.

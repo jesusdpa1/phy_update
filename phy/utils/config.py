@@ -8,8 +8,8 @@ import logging
 from pathlib import Path
 from textwrap import dedent
 
-from traitlets.config import Config, PyFileConfigLoader, JSONFileConfigLoader
 from phylib.utils._misc import ensure_dir_exists, phy_config_dir
+from traitlets.config import Config, JSONFileConfigLoader, PyFileConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ def _default_config(config_dir=None):
         config_dir = Path.home() / '.phy'
     path = config_dir / 'plugins'
     return dedent(
-        """
+        f"""
     # You can also put your plugins in ~/.phy/plugins/.
 
     from phy import IPlugin
@@ -55,8 +55,8 @@ def _default_config(config_dir=None):
     #         pass
 
     c = get_config()
-    c.Plugins.dirs = [r'{}']
-    """.format(path)
+    c.Plugins.dirs = [r'{path}']
+    """
     )
 
 

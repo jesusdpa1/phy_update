@@ -7,12 +7,12 @@
 import logging
 from textwrap import dedent
 
+from phylib.utils._misc import write_text
 from pytest import fixture
 from traitlets import Float
 from traitlets.config import Configurable
 
 from .. import config as _config
-from phylib.utils._misc import write_text
 from ..config import (
     ensure_dir_exists,
     load_config,

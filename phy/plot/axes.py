@@ -7,21 +7,20 @@
 
 import numpy as np
 from matplotlib.ticker import MaxNLocator
+from phylib import connect
+from phylib.utils._types import _is_integer
 
+from phy.gui.qt import is_high_dpi
 
 from .transform import NDC, Range, _fix_coordinate_in_visual
 from .visuals import LineVisual, TextVisual
-from phylib import connect
-from phylib.utils._types import _is_integer
-from phy.gui.qt import is_high_dpi
-
 
 # ------------------------------------------------------------------------------
 # Utils
 # ------------------------------------------------------------------------------
 
 
-class AxisLocator(object):
+class AxisLocator:
     """Determine the location of ticks in a view.
 
     Constructor
@@ -125,7 +124,7 @@ def _quant_zoom(z):
     return int(z) if z >= 1 else -int(1.0 / z)
 
 
-class Axes(object):
+class Axes:
     """Dynamic axes that move along the camera when panning and zooming.
 
     Constructor

@@ -8,8 +8,9 @@ import logging
 import os
 import shutil
 
-from ..state import GUIState, _gui_state_path, _get_default_state_path
 from phylib.utils import Bunch, load_json, save_json
+
+from ..state import GUIState, _get_default_state_path, _gui_state_path
 
 logger = logging.getLogger(__name__)
 
@@ -19,7 +20,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 
 
-class MyClass(object):
+class MyClass:
     pass
 
 
@@ -33,7 +34,7 @@ def test_gui_state_view_1(tempdir):
     view = Bunch(name='MyView0')
     path = _gui_state_path('GUI', tempdir)
     state = GUIState(path)
-    state.update_view_state(view, dict(hello='world'))
+    state.update_view_state(view, {'hello': 'world'})
     assert not state.get_view_state(Bunch(name='MyView'))
     assert not state.get_view_state(Bunch(name='MyView (1)'))
     assert state.get_view_state(view) == Bunch(hello='world')

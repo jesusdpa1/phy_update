@@ -10,8 +10,8 @@ from pytest import raises
 
 from .._utils import (
     ClusterMeta,
-    UpdateInfo,
     RotatingProperty,
+    UpdateInfo,
     _update_cluster_selection,
     create_cluster_meta,
 )

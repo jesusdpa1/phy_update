@@ -8,16 +8,15 @@
 from itertools import product
 
 import numpy as np
-from numpy.testing import assert_equal as ae
 from numpy.testing import assert_allclose as ac
+from numpy.testing import assert_equal as ae
 
-from ..base import BaseVisual, BaseCanvas
-from ..interact import Grid, Boxed, Stacked, Lasso
+from ..base import BaseCanvas, BaseVisual
+from ..interact import Boxed, Grid, Lasso, Stacked
 from ..panzoom import PanZoom
 from ..transform import NDC
 from ..visuals import ScatterVisual
 from . import mouse_click
-
 
 # ------------------------------------------------------------------------------
 # Fixtures
@@ -28,7 +27,7 @@ N = 10000
 
 class MyTestVisual(BaseVisual):
     def __init__(self):
-        super(MyTestVisual, self).__init__()
+        super().__init__()
         self.vertex_shader = """
             attribute vec2 a_position;
             void main() {

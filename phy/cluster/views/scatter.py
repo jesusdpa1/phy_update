@@ -10,9 +10,10 @@ import logging
 
 import numpy as np
 
-from phy.utils.color import selected_cluster_color, spike_colors
-from .base import ManualClusteringView, MarkerSizeMixin, LassoMixin
 from phy.plot.visuals import ScatterVisual
+from phy.utils.color import selected_cluster_color, spike_colors
+
+from .base import LassoMixin, ManualClusteringView, MarkerSizeMixin
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +44,7 @@ class ScatterView(MarkerSizeMixin, LassoMixin, ManualClusteringView):
     }
 
     def __init__(self, coords=None, **kwargs):
-        super(ScatterView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         # Save the marker size in the global and local view's config.
 
         self.canvas.enable_axes()

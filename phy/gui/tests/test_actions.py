@@ -6,20 +6,19 @@
 
 from functools import partial
 
+from phylib.utils.testing import captured_logging, captured_output
 from pytest import raises
 
 from ..actions import (
+    Actions,
+    _expected_args,
+    _get_qkeysequence,
+    _get_shortcut_string,
+    _parse_snippet,
     _show_shortcuts,
     _show_snippets,
-    _get_shortcut_string,
-    _get_qkeysequence,
-    _parse_snippet,
-    _expected_args,
-    Actions,
 )
-from phylib.utils.testing import captured_output, captured_logging
 from ..qt import mock_dialogs
-
 
 # ------------------------------------------------------------------------------
 # Test actions
@@ -208,10 +207,9 @@ def test_actions_dialog_1(qtbot, gui, actions):
     gui.show()
     qtbot.waitForWindowShown(gui)
 
-    with captured_output() as (stdout, stderr):
-        with mock_dialogs(('world', True)):
-            # return string, ok
-            actions.get('hello').trigger()
+    with captured_output() as (stdout, stderr), mock_dialogs(('world', True)):
+        # return string, ok
+        actions.get('hello').trigger()
     assert 'hello world' in stdout.getvalue()
 
 
@@ -224,15 +222,13 @@ def test_actions_dialog_2(qtbot, gui, actions):
     gui.show()
     qtbot.waitForWindowShown(gui)
 
-    with captured_output() as (stdout, stderr):
-        with mock_dialogs(('world world', True)):
-            # return string, ok
-            actions.get('hello').trigger()
+    with captured_output() as (stdout, stderr), mock_dialogs(('world world', True)):
+        # return string, ok
+        actions.get('hello').trigger()
     assert 'hello world' in stdout.getvalue()
 
-    with captured_logging('phy.gui.actions') as buf:
-        with mock_dialogs(('world', True)):
-            actions.get('hello').trigger()
+    with captured_logging('phy.gui.actions') as buf, mock_dialogs(('world', True)):
+        actions.get('hello').trigger()
     assert 'invalid' in buf.getvalue().lower()
 
 
@@ -280,7 +276,7 @@ def test_snippets_gui(qtbot, gui, actions):
         """Simulate keystrokes."""
         for char in cmd:
             i = snippets._snippet_chars.index(char)
-            snippets.actions.run('_snippet_{}'.format(i))
+            snippets.actions.run(f'_snippet_{i}')
 
     snippets.actions.enable_snippet_mode()
     _run('t2 ')
@@ -300,7 +296,7 @@ def test_snippets_gui(qtbot, gui, actions):
 
 def test_snippets_parse():
     def _check(args, expected):
-        snippet = 'snip ' + args
+        snippet = f"snip {args}"
         assert _parse_snippet(snippet) == tuple(['snip'] + expected)
 
     _check('a', ['a'])
@@ -388,7 +384,7 @@ def test_snippets_actions_1(actions, snippets):
         """Simulate keystrokes."""
         for char in cmd:
             i = snippets._snippet_chars.index(char)
-            snippets.actions.run('_snippet_{}'.format(i))
+            snippets.actions.run(f'_snippet_{i}')
 
     # Need to activate the snippet mode first.
     with raises(ValueError):

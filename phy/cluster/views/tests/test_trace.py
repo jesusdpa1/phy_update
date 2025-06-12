@@ -6,15 +6,14 @@
 
 import numpy as np
 from numpy.testing import assert_allclose as ac
-
-from phylib.io.mock import artificial_traces, artificial_spike_clusters
+from phylib.io.mock import artificial_spike_clusters, artificial_traces
 from phylib.utils import Bunch, connect
 from phylib.utils.geometry import linear_positions
+
 from phy.plot.tests import mouse_click
 
-from ..trace import TraceView, TraceImageView, select_traces, _iter_spike_waveforms
+from ..trace import TraceImageView, TraceView, _iter_spike_waveforms, select_traces
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test trace view

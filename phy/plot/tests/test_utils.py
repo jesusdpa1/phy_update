@@ -6,12 +6,11 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-from numpy.testing import assert_array_equal as ae
 from numpy.testing import assert_allclose as ac
+from numpy.testing import assert_array_equal as ae
 from pytest import raises
 
-from ..utils import _load_shader, _tesselate_histogram, BatchAccumulator, _in_polygon
-
+from ..utils import BatchAccumulator, _in_polygon, _load_shader, _tesselate_histogram
 
 # ------------------------------------------------------------------------------
 # Test utilities

@@ -10,7 +10,6 @@ from operator import itemgetter
 from pathlib import Path
 
 import numpy as np
-
 from phylib import _add_log_file
 from phylib.io.model import TemplateModel, load_model
 from phylib.io.traces import MtscompEphysReader
@@ -18,7 +17,8 @@ from phylib.utils import Bunch, connect
 
 from phy.cluster.views import ScatterView
 from phy.gui import create_app, run_app
-from ..base import WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin, BaseController
+
+from ..base import BaseController, FeatureMixin, TemplateMixin, TraceMixin, WaveformMixin
 
 logger = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
     # -------------------------------------------------------------------------
 
     def _get_waveforms_dict(self):
-        waveforms_dict = super(TemplateController, self)._get_waveforms_dict()
+        waveforms_dict = super()._get_waveforms_dict()
         # Remove waveforms and mean_waveforms if there is no raw data file.
         if self.model.traces is None and self.model.spike_waveforms is None:
             waveforms_dict.pop('waveforms', None)
@@ -92,7 +92,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
         return TemplateModel(dir_path=dir_path, **kwargs)
 
     def _set_supervisor(self):
-        super(TemplateController, self)._set_supervisor()
+        super()._set_supervisor()
 
         supervisor = self.supervisor
 
@@ -107,7 +107,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
                 supervisor.actions.split(s, self.model.spike_templates[s])
 
     def _set_similarity_functions(self):
-        super(TemplateController, self)._set_similarity_functions()
+        super()._set_similarity_functions()
         self.similarity_functions['template'] = self.template_similarity
         self.similarity = 'template'
 
@@ -139,7 +139,7 @@ class TemplateController(WaveformMixin, FeatureMixin, TemplateMixin, TraceMixin,
         ]
 
     def _set_view_creator(self):
-        super(TemplateController, self)._set_view_creator()
+        super()._set_view_creator()
         self.view_creator['TemplateFeatureView'] = self.create_template_feature_view
 
     # Public methods

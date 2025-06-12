@@ -9,7 +9,6 @@ import logging
 from pathlib import Path
 
 import numpy as np
-
 from phylib.utils import Bunch, _as_array
 
 logger = logging.getLogger(__name__)
@@ -59,9 +58,8 @@ def _get_array(val, shape, default=None, dtype=np.float64):
     out = np.zeros(shape, dtype=dtype)
     # This solves `ValueError: could not broadcast input array from shape (n)
     # into shape (n, 1)`.
-    if val is not None and isinstance(val, np.ndarray):
-        if val.size == out.size:
-            val = val.reshape(out.shape)
+    if val is not None and isinstance(val, np.ndarray) and val.size == out.size:
+        val = val.reshape(out.shape)
     out.flat[:] = val if val is not None else default
     assert out.shape == shape
     return out
@@ -100,7 +98,7 @@ def get_linear_x(n_signals, n_samples):
     return np.tile(np.linspace(-1.0, 1.0, n_samples), (n_signals, 1))
 
 
-class BatchAccumulator(object):
+class BatchAccumulator:
     """Accumulate data arrays for batch visuals.
 
     This class is used to simplify the creation of batch visuals, where different visual elements
@@ -184,7 +182,7 @@ class BatchAccumulator(object):
     @property
     def data(self):
         """Return the concatenated data as a dictionary."""
-        return Bunch({key: getattr(self, key) for key in self.items.keys()})
+        return Bunch({key: getattr(self, key) for key in self.items})
 
 
 # ------------------------------------------------------------------------------

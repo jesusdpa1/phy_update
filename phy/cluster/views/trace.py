@@ -8,13 +8,14 @@
 import logging
 
 import numpy as np
-
 from phylib.utils import Bunch, emit
-from phy.utils.color import selected_cluster_color, colormaps, _continuous_colormap, add_alpha
+
 from phy.plot.interact import Stacked
 from phy.plot.transform import NDC, Range, _fix_coordinate_in_visual
-from phy.plot.visuals import PlotVisual, UniformPlotVisual, TextVisual, ImageVisual
-from .base import ManualClusteringView, ScalingMixin, BaseColorView
+from phy.plot.visuals import ImageVisual, PlotVisual, TextVisual, UniformPlotVisual
+from phy.utils.color import _continuous_colormap, add_alpha, colormaps, selected_cluster_color
+
+from .base import BaseColorView, ManualClusteringView, ScalingMixin
 
 logger = logging.getLogger(__name__)
 
@@ -173,7 +174,7 @@ class TraceView(ScalingMixin, BaseColorView, ManualClusteringView):
         self.dt = 1.0 / self.sample_rate
 
         # Traces and spikes.
-        assert hasattr(traces, '__call__')
+        assert callable(traces)
         self.traces = traces
         # self.waveforms = None
 
@@ -202,7 +203,7 @@ class TraceView(ScalingMixin, BaseColorView, ManualClusteringView):
         assert len(self.channel_labels) == n_channels
 
         # Initialize the view.
-        super(TraceView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += ('origin', 'do_show_labels', 'show_all_spikes', 'auto_scale')
         self.local_state_attrs += (
             'interval',
@@ -424,7 +425,7 @@ class TraceView(ScalingMixin, BaseColorView, ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(TraceView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(self.toggle_show_labels, checkable=True, checked=self.do_show_labels)
         self.actions.add(
@@ -461,7 +462,7 @@ class TraceView(ScalingMixin, BaseColorView, ManualClusteringView):
     @property
     def status(self):
         a, b = self._interval
-        return '[{:.2f}s - {:.2f}s]. Color scheme: {}.'.format(a, b, self.color_scheme)
+        return f'[{a:.2f}s - {b:.2f}s]. Color scheme: {self.color_scheme}.'
 
     # Origin
     # -------------------------------------------------------------------------
@@ -668,7 +669,7 @@ class TraceView(ScalingMixin, BaseColorView, ManualClusteringView):
 
     def on_mouse_wheel(self, e):  # pragma: no cover
         """Scroll through the data with alt+wheel."""
-        super(TraceView, self).on_mouse_wheel(e)
+        super().on_mouse_wheel(e)
         if e.modifiers == ('Alt',):
             start, end = self._interval
             delay = e.delta * (end - start) * 0.1
@@ -730,7 +731,7 @@ class TraceImageView(TraceView):
         self._scaling = 1
         self.vrange = (0, 1)
 
-        super(TraceImageView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.state_attrs += ('origin', 'auto_scale')
         self.local_state_attrs += (

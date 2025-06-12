@@ -4,19 +4,18 @@
 # -----------------------------------------------------------------------------
 
 import logging
-from operator import attrgetter
 import re
+from operator import attrgetter
 
 import numpy as np
 
 from . import gl
-from .snippet import Snippet
-from .globject import GLObject
 from .array import VertexArray
-from .buffer import VertexBuffer, IndexBuffer
-from .shader import VertexShader, FragmentShader, GeometryShader
-from .variable import Uniform, Attribute
-
+from .buffer import IndexBuffer, VertexBuffer
+from .globject import GLObject
+from .shader import FragmentShader, GeometryShader, VertexShader
+from .snippet import Snippet
+from .variable import Attribute, Uniform
 
 log = logging.getLogger(__name__)
 
@@ -153,7 +152,6 @@ class Program(GLObject):
 
     def _setup(self):
         """Setup the program by resolving all pending hooks."""
-        pass
 
     def _create(self):
         """
@@ -242,13 +240,13 @@ class Program(GLObject):
         self._geom_hooks = {}
 
         if self._vertex is not None:
-            for hook, subhook in self._vertex.hooks:
+            for hook, _subhook in self._vertex.hooks:
                 self._vert_hooks[hook] = None
         if self._fragment is not None:
-            for hook, subhook in self._fragment.hooks:
+            for hook, _subhook in self._fragment.hooks:
                 self._frag_hooks[hook] = None
         if self._geometry is not None:
-            for hook, subhook in self._geometry.hooks:
+            for hook, _subhook in self._geometry.hooks:
                 self._geom_hooks[hook] = None
 
     def _build_uniforms(self):
@@ -259,7 +257,7 @@ class Program(GLObject):
 
         count = 0
         for name, gtype in self.all_uniforms:
-            if name not in self._uniforms.keys():
+            if name not in self._uniforms:
                 uniform = Uniform(self, name, gtype)
             else:
                 uniform = self._uniforms[name]
@@ -278,7 +276,7 @@ class Program(GLObject):
 
         dtype = []
         for name, gtype in self.all_attributes:
-            if name not in self._attributes.keys():
+            if name not in self._attributes:
                 attribute = Attribute(self, name, gtype)
             else:
                 attribute = self._attributes[name]
@@ -297,7 +295,7 @@ class Program(GLObject):
 
         if isinstance(data, (VertexBuffer, VertexArray)):
             for name in data.dtype.names:
-                if name in self._attributes.keys():
+                if name in self._attributes:
                     self._attributes[name].set_data(data.ravel()[name])
 
     def __setitem__(self, name, data):
@@ -332,25 +330,25 @@ class Program(GLObject):
         #     self._build_attributes()
         #     self._need_update = True
 
-        elif name in self._uniforms.keys():
+        elif name in self._uniforms:
             self._uniforms[name].set_data(data)
-        elif name in self._attributes.keys():
+        elif name in self._attributes:
             self._attributes[name].set_data(data)
         else:
             raise IndexError(
-                'Unknown item %s (no corresponding hook, uniform or attribute)' % name
+                f'Unknown item {name} (no corresponding hook, uniform or attribute)'
             )
 
     def __getitem__(self, name):
-        if name in self._vert_hooks.keys():
+        if name in self._vert_hooks:
             return self._vert_hooks[name]
-        elif name in self._frag_hooks.keys():
+        elif name in self._frag_hooks:
             return self._frag_hooks[name]
         #        if name in self._hooks.keys():
         #            return self._hooks[name][1]
-        elif name in self._uniforms.keys():
+        elif name in self._uniforms:
             return self._uniforms[name].data
-        elif name in self._attributes.keys():
+        elif name in self._attributes:
             return self._attributes[name].data
         else:
             raise IndexError('Unknown item (no corresponding hook, uniform or attribute)')
@@ -592,7 +590,7 @@ class Program(GLObject):
         """
 
         if isinstance(mode, str):
-            mode = getattr(gl, 'GL_%s' % mode.upper())
+            mode = getattr(gl, f'GL_{mode.upper()}')
 
         self.activate()
         attributes = self._attributes.values()

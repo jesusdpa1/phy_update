@@ -5,25 +5,26 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-from collections import defaultdict
 import logging
+from collections import defaultdict
 
 import numpy as np
-
 from phylib.io.array import _flatten, _index_of
 from phylib.utils import emit
-from phy.utils.color import selected_cluster_color
+
+from phy.cluster._utils import RotatingProperty
 from phy.plot import get_linear_x
 from phy.plot.visuals import (  # noqa
-    PlotVisual,
-    PlotAggVisual,
-    UniformScatterVisual,
-    TextVisual,
     LineVisual,
-    _min,
+    PlotAggVisual,
+    PlotVisual,
+    TextVisual,
+    UniformScatterVisual,
     _max,
+    _min,
 )
-from phy.cluster._utils import RotatingProperty
+from phy.utils.color import selected_cluster_color
+
 from .base import ManualClusteringView, ScalingMixin
 
 logger = logging.getLogger(__name__)
@@ -37,7 +38,7 @@ logger = logging.getLogger(__name__)
 def _get_box_pos(bunchs, channel_ids):
     cp = {}
     for d in bunchs:
-        cp.update({cid: pos for cid, pos in zip(d.channel_ids, d.channel_positions)})
+        cp.update(dict(zip(d.channel_ids, d.channel_positions)))
     return np.stack([cp[cid] for cid in channel_ids])
 
 
@@ -133,7 +134,7 @@ class WaveformView(ScalingMixin, ManualClusteringView):
         assert sample_rate > 0.0, 'The sample rate must be provided to the waveform view.'
 
         # Initialize the view.
-        super(WaveformView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += ('waveforms_type', 'overlap', 'do_show_labels')
         self.local_state_attrs += ('box_scaling', 'probe_scaling')
 
@@ -369,7 +370,7 @@ class WaveformView(ScalingMixin, ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(WaveformView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(self.toggle_waveform_overlap, checkable=True, checked=self.overlap)
         self.actions.add(self.toggle_show_labels, checkable=True, checked=self.do_show_labels)

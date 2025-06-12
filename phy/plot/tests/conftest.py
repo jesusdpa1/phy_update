@@ -9,7 +9,6 @@ from pytest import fixture
 from ..base import BaseCanvas
 from ..panzoom import PanZoom
 
-
 # ------------------------------------------------------------------------------
 # Utilities and fixtures
 # ------------------------------------------------------------------------------

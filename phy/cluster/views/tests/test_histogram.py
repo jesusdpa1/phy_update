@@ -5,11 +5,10 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
 from phylib.utils import Bunch
+
 from ..histogram import HistogramView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test Histogram view

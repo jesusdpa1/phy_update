@@ -8,10 +8,11 @@
 import logging
 
 import numpy as np
-
 from phylib.io.array import _clip
+
 from phy.plot.visuals import HistogramVisual, TextVisual
 from phy.utils.color import selected_cluster_color
+
 from .base import ManualClusteringView, ScalingMixin
 
 logger = logging.getLogger(__name__)
@@ -90,17 +91,17 @@ class HistogramView(ScalingMixin, ManualClusteringView):
     }
 
     default_snippets = {
-        'set_n_bins': '%sn' % alias_char,
-        'set_bin_size (%s)' % bin_unit: '%sb' % alias_char,
-        'set_x_min (%s)' % bin_unit: '%smin' % alias_char,
-        'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
+        'set_n_bins': f'{alias_char}n',
+        f'set_bin_size ({bin_unit})': f'{alias_char}b',
+        f'set_x_min ({bin_unit})': f'{alias_char}min',
+        f'set_x_max ({bin_unit})': f'{alias_char}max',
     }
 
     _state_attrs = ('n_bins', 'x_min', 'x_max')
     _local_state_attrs = ()
 
     def __init__(self, cluster_stat=None):
-        super(HistogramView, self).__init__()
+        super().__init__()
         self.state_attrs += self._state_attrs
         self.local_state_attrs += self._local_state_attrs
         self.canvas.set_layout(layout='stacked', n_plots=1)
@@ -203,29 +204,29 @@ class HistogramView(ScalingMixin, ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(HistogramView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(
             self.set_n_bins,
-            alias=self.alias_char + 'n',
+            alias=f"{self.alias_char}n",
             prompt=True,
             prompt_default=lambda: self.n_bins,
         )
         self.actions.add(
             self.set_bin_size,
-            alias=self.alias_char + 'b',
+            alias=f"{self.alias_char}b",
             prompt=True,
             prompt_default=lambda: self.bin_size,
         )
         self.actions.add(
             self.set_x_min,
-            alias=self.alias_char + 'min',
+            alias=f"{self.alias_char}min",
             prompt=True,
             prompt_default=lambda: self.x_min,
         )
         self.actions.add(
             self.set_x_max,
-            alias=self.alias_char + 'max',
+            alias=f"{self.alias_char}max",
             prompt=True,
             prompt_default=lambda: self.x_max,
         )
@@ -234,9 +235,7 @@ class HistogramView(ScalingMixin, ManualClusteringView):
     @property
     def status(self):
         f = 1 if self.bin_unit == 's' else 1000
-        return '[{:.1f}{u}, {:.1f}{u:s}]'.format(
-            (self.x_min or 0) * f, (self.x_max or 0) * f, u=self.bin_unit
-        )
+        return f'[{(self.x_min or 0) * f:.1f}{self.bin_unit}, {(self.x_max or 0) * f:.1f}{self.bin_unit:s}]'
 
     # Histogram parameters
     # -------------------------------------------------------------------------
@@ -296,7 +295,7 @@ class HistogramView(ScalingMixin, ManualClusteringView):
 
     def on_mouse_wheel(self, e):  # pragma: no cover
         """Change the scaling with the wheel."""
-        super(HistogramView, self).on_mouse_wheel(e)
+        super().on_mouse_wheel(e)
         if e.modifiers == ('Shift',):
             self.x_min *= 1.1**e.delta
             self.x_min = min(self.x_min, self.x_max)
@@ -323,10 +322,10 @@ class ISIView(HistogramView):
     }
 
     default_snippets = {
-        'set_n_bins': '%sn' % alias_char,
-        'set_bin_size (%s)' % bin_unit: '%sb' % alias_char,
-        'set_x_min (%s)' % bin_unit: '%smin' % alias_char,
-        'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
+        'set_n_bins': f'{alias_char}n',
+        f'set_bin_size ({bin_unit})': f'{alias_char}b',
+        f'set_x_min ({bin_unit})': f'{alias_char}min',
+        f'set_x_max ({bin_unit})': f'{alias_char}max',
     }
 
 
@@ -346,8 +345,8 @@ class FiringRateView(HistogramView):
     }
 
     default_snippets = {
-        'set_n_bins': '%sn' % alias_char,
-        'set_bin_size (%s)' % bin_unit: '%sb' % alias_char,
-        'set_x_min (%s)' % bin_unit: '%smin' % alias_char,
-        'set_x_max (%s)' % bin_unit: '%smax' % alias_char,
+        'set_n_bins': f'{alias_char}n',
+        f'set_bin_size ({bin_unit})': f'{alias_char}b',
+        f'set_x_min ({bin_unit})': f'{alias_char}min',
+        f'set_x_max ({bin_unit})': f'{alias_char}max',
     }

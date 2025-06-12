@@ -3,10 +3,9 @@
 # Distributed under the (new) BSD License.
 # -----------------------------------------------------------------------------
 
-import re
 import logging
+import re
 from pathlib import Path
-
 
 log = logging.getLogger(__name__)
 
@@ -57,17 +56,17 @@ def merge_includes(code):
             includes.append(filename)
             path = _find(filename)
             if not path:
-                log.critical('"%s" not found' % filename)
+                log.critical(f'"{filename}" not found')
                 raise RuntimeError('File not found')
-            text = '\n// --- start of "%s" ---\n' % filename
+            text = f'\n// --- start of "{filename}" ---\n'
             with open(str(path)) as f:
                 text += remove_comments(f.read())
-            text += '// --- end of "%s" ---\n' % filename
+            text += f'// --- end of "{filename}" ---\n'
             return text
         return ''
 
     # Limit recursion to depth 10
-    for i in range(10):
+    for _i in range(10):
         if re.search(regex, code):
             code = re.sub(regex, replace, code)
         else:
@@ -98,26 +97,16 @@ def get_declarations(code, qualifier=''):
     variables = []
 
     if isinstance(qualifier, list):
-        qualifier = '(' + '|'.join([str(q) for q in qualifier]) + ')'
+        qualifier = f"({'|'.join([str(q) for q in qualifier])})"
 
-    if qualifier != '':
-        re_type = re.compile(
-            r"""
-                             %s                               # Variable qualifier
+    re_type = re.compile(rf"""
+                             {qualifier}                               # Variable qualifier
                              \s+(?P<type>\w+)                 # Variable type
                              \s+(?P<names>[\w,\[\]\n =\.$]+); # Variable name(s)
-                             """
-            % qualifier,
-            re.VERBOSE,
-        )
-    else:
-        re_type = re.compile(
-            r"""
+                             """, re.VERBOSE) if qualifier != '' else re.compile(r"""
                              \s*(?P<type>\w+)         # Variable type
                              \s+(?P<names>[\w\[\] ]+) # Variable name(s)
-                             """,
-            re.VERBOSE,
-        )
+                             """, re.VERBOSE)
 
     re_names = re.compile(
         r"""
@@ -197,13 +186,12 @@ def get_functions(code):
 
     functions = []
     regex = re.compile(
-        r"""
+        rf"""
                        \s*(?P<type>\w+)    # Function return type
                        \s+(?P<name>[\w]+)   # Function name
                        \s*\((?P<args>.*?)\) # Function arguments
-                       \s*\{(?P<code>%s)\} # Function content
-                       """
-        % brace_matcher(5),
+                       \s*\{{(?P<code>{brace_matcher(5)})\}} # Function content
+                       """,
         re.VERBOSE | re.DOTALL,
     )
 

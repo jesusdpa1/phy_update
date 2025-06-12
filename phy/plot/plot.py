@@ -7,28 +7,28 @@
 
 import logging
 
-import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from phylib.utils._types import _as_tuple
 
 from .axes import Axes
 from .base import BaseCanvas
-from .interact import Grid, Boxed, Stacked, Lasso
+from .interact import Boxed, Grid, Lasso, Stacked
 from .panzoom import PanZoom
-from .visuals import (
-    ScatterVisual,
-    UniformScatterVisual,
-    PlotVisual,
-    UniformPlotVisual,
-    HistogramVisual,
-    TextVisual,
-    LineVisual,
-    PolygonVisual,
-    DEFAULT_COLOR,
-)
 from .transform import NDC
-from phylib.utils._types import _as_tuple
+from .visuals import (
+    DEFAULT_COLOR,
+    HistogramVisual,
+    LineVisual,
+    PlotVisual,
+    PolygonVisual,
+    ScatterVisual,
+    TextVisual,
+    UniformPlotVisual,
+    UniformScatterVisual,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class PlotCanvas(BaseCanvas):
     _enabled = False
 
     def __init__(self, *args, **kwargs):
-        super(PlotCanvas, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def _enable(self):
         """Enable panzoom, axes, and lasso if required."""
@@ -120,7 +120,7 @@ class PlotCanvas(BaseCanvas):
             self._enable()
         # The visual is not added again if it has already been added, in which case
         # the following call is a no-op.
-        super(PlotCanvas, self).add_visual(
+        super().add_visual(
             visual,
             # Remove special reserved keywords from kwargs, which is otherwise supposed to
             # contain data for visual.set_data().
@@ -255,7 +255,7 @@ _MPL_MARKER = {
 }
 
 
-class PlotCanvasMpl(object):
+class PlotCanvasMpl:
     """Matplotlib backend for a plot canvas (incomplete, work in progress)."""
 
     _current_box_index = (0,)
@@ -298,8 +298,7 @@ class PlotCanvasMpl(object):
         return self.axes
 
     def iter_ax(self):
-        for ax in self.axes.flat:
-            yield ax
+        yield from self.axes.flat
 
     def config_ax(self, ax):
         xaxis = ax.get_xaxis()

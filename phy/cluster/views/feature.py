@@ -9,11 +9,12 @@ import logging
 import re
 
 import numpy as np
-
 from phylib.utils import Bunch, emit
-from phy.utils.color import selected_cluster_color
+
 from phy.plot.transform import Range
-from phy.plot.visuals import ScatterVisual, TextVisual, LineVisual
+from phy.plot.visuals import LineVisual, ScatterVisual, TextVisual
+from phy.utils.color import selected_cluster_color
+
 from .base import ManualClusteringView, MarkerSizeMixin, ScalingMixin
 
 logger = logging.getLogger(__name__)
@@ -33,14 +34,11 @@ def _get_default_grid():
     0A,0B   1A,0B   time,0B 1B,0B
     0A,1B   1A,1B   0B,1B   time,1B
     """.strip()
-    return [[_ for _ in re.split(' +', line.strip())] for line in s.splitlines()]
+    return [list(re.split(' +', line.strip())) for line in s.splitlines()]
 
 
 def _get_point_color(clu_idx=None):
-    if clu_idx is not None:
-        color = selected_cluster_color(clu_idx, 0.5)
-    else:
-        color = (0.5,) * 4
+    color = selected_cluster_color(clu_idx, 0.5) if clu_idx is not None else (0.5,) * 4
     assert len(color) == 4
     return color
 
@@ -108,7 +106,7 @@ class FeatureView(MarkerSizeMixin, ScalingMixin, ManualClusteringView):
     }
 
     def __init__(self, features=None, attributes=None, **kwargs):
-        super(FeatureView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += ('fixed_channels', 'feature_scaling')
 
         assert features
@@ -269,7 +267,7 @@ class FeatureView(MarkerSizeMixin, ScalingMixin, ManualClusteringView):
 
     def _plot_axes(self):
         self.line_visual.reset_batch()
-        for i, j, dim_x, dim_y in self._iter_subplots():
+        for i, j, _dim_x, _dim_y in self._iter_subplots():
             self.line_visual.add_batch_data(
                 pos=[[-1.0, 0.0, +1.0, 0.0], [0.0, -1.0, 0.0, +1.0]],
                 color=(0.5, 0.5, 0.5, 0.5),
@@ -349,7 +347,7 @@ class FeatureView(MarkerSizeMixin, ScalingMixin, ManualClusteringView):
         # Fix the channels if the view updates after a cluster event
         # and there are new clusters.
         fixed_channels = (
-            self.fixed_channels or kwargs.get('fixed_channels', None) or added is not None
+            self.fixed_channels or kwargs.get('fixed_channels') or added is not None
         )
 
         # Get the clusters data.
@@ -386,7 +384,7 @@ class FeatureView(MarkerSizeMixin, ScalingMixin, ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(FeatureView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(
             self.toggle_automatic_channel_selection,
@@ -405,7 +403,7 @@ class FeatureView(MarkerSizeMixin, ScalingMixin, ManualClusteringView):
         if self.channel_ids is None:  # pragma: no cover
             return ''
         channel_labels = [self.channel_labels[ch] for ch in self.channel_ids[:2]]
-        return 'channels: %s' % ', '.join(channel_labels)
+        return f"channels: {', '.join(channel_labels)}"
 
     # Dimension selection
     # -------------------------------------------------------------------------

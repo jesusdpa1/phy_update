@@ -8,12 +8,13 @@
 import logging
 
 import numpy as np
+from phylib.io.array import _clip
+from phylib.utils import Bunch
 
 from phy.plot.transform import Scale
 from phy.plot.visuals import HistogramVisual, LineVisual, TextVisual
-from phylib.io.array import _clip
-from phylib.utils import Bunch
-from phy.utils.color import selected_cluster_color, _override_hsv, add_alpha
+from phy.utils.color import _override_hsv, add_alpha, selected_cluster_color
+
 from .base import ManualClusteringView, ScalingMixin
 
 logger = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ class CorrelogramView(ScalingMixin, ManualClusteringView):
     }
 
     def __init__(self, correlograms=None, firing_rate=None, sample_rate=None, **kwargs):
-        super(CorrelogramView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += (
             'bin_size',
             'window_size',
@@ -236,7 +237,7 @@ class CorrelogramView(ScalingMixin, ManualClusteringView):
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(CorrelogramView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(self.toggle_normalization, shortcut='n', checkable=True)
         self.actions.add(self.toggle_labels, checkable=True, checked=True)
@@ -273,7 +274,7 @@ class CorrelogramView(ScalingMixin, ManualClusteringView):
     @property
     def status(self):
         b, w = self.bin_size * 1000, self.window_size * 1000
-        return '{:.1f} ms ({:.1f} ms)'.format(w, b)
+        return f'{w:.1f} ms ({b:.1f} ms)'
 
     def set_refractory_period(self, value):
         """Set the refractory period (in milliseconds)."""
@@ -308,7 +309,7 @@ class CorrelogramView(ScalingMixin, ManualClusteringView):
 
     def on_mouse_wheel(self, e):  # pragma: no cover
         """Change the scaling with the wheel."""
-        super(CorrelogramView, self).on_mouse_wheel(e)
+        super().on_mouse_wheel(e)
         if e.modifiers == ('Alt',):
             self._set_bin_window(bin_size=self.bin_size * 1.1**e.delta)
             self.plot()

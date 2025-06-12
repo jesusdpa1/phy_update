@@ -10,10 +10,9 @@ import os
 from numpy.testing import assert_allclose as ac
 from pytest import fixture
 
-from . import mouse_drag, key_press
 from ..base import BaseVisual
 from ..panzoom import PanZoom
-
+from . import key_press, mouse_drag
 
 # ------------------------------------------------------------------------------
 # Fixtures
@@ -22,7 +21,7 @@ from ..panzoom import PanZoom
 
 class MyTestVisual(BaseVisual):
     def __init__(self):
-        super(MyTestVisual, self).__init__()
+        super().__init__()
         self.set_shader('simple')
         self.set_primitive_type('lines')
 

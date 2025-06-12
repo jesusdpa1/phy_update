@@ -8,13 +8,13 @@
 import logging
 
 import numpy as np
-
 from phylib.io.array import _index_of
 from phylib.utils import emit
+
+from phy.plot.visuals import ScatterVisual
 from phy.utils.color import _add_selected_clusters_colors
 
-from .base import ManualClusteringView, BaseGlobalView, MarkerSizeMixin, BaseColorView
-from phy.plot.visuals import ScatterVisual
+from .base import BaseColorView, BaseGlobalView, ManualClusteringView, MarkerSizeMixin
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +60,7 @@ class RasterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualClusterin
         self.set_spike_clusters(spike_clusters)
         self.set_cluster_ids(cluster_ids)
 
-        super(RasterView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.canvas.set_layout('stacked', origin='top', n_plots=self.n_clusters, has_clip=False)
         self.canvas.enable_axes()
@@ -151,7 +151,7 @@ class RasterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualClusterin
 
     @property
     def status(self):
-        return 'Color scheme: %s' % self.color_scheme
+        return f'Color scheme: {self.color_scheme}'
 
     def plot(self, **kwargs):
         """Make the raster plot."""
@@ -176,14 +176,14 @@ class RasterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualClusterin
 
     def attach(self, gui):
         """Attach the view to the GUI."""
-        super(RasterView, self).attach(gui)
+        super().attach(gui)
 
         self.actions.add(self.increase_marker_size)
         self.actions.add(self.decrease_marker_size)
         self.actions.separator()
 
     def on_select(self, *args, **kwargs):
-        super(RasterView, self).on_select(*args, **kwargs)
+        super().on_select(*args, **kwargs)
         self.update_color()
 
     def zoom_to_time_range(self, interval):

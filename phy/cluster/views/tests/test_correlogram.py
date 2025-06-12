@@ -5,12 +5,10 @@
 # ------------------------------------------------------------------------------
 
 import numpy as np
-
 from phylib.io.mock import artificial_correlograms
 
 from ..correlogram import CorrelogramView
 from . import _stop_and_close
-
 
 # ------------------------------------------------------------------------------
 # Test correlogram view

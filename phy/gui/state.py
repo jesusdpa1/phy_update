@@ -9,14 +9,15 @@ try:  # pragma: no cover
     from collections.abc import Mapping  # noqa
 except ImportError:  # pragma: no cover
     from collections import Mapping  # noqa
-from copy import deepcopy
 import inspect
 import json
 import logging
-from pathlib import Path
 import shutil
+from copy import deepcopy
+from pathlib import Path
 
 from phylib.utils import Bunch, _bunchify, load_json, save_json
+
 from phy.utils import ensure_dir_exists, phy_config_dir
 
 logger = logging.getLogger(__name__)
@@ -137,7 +138,7 @@ class GUIState(Bunch):
     def __init__(
         self, path=None, local_path=None, default_state_path=None, local_keys=None, **kwargs
     ):
-        super(GUIState, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self._path = Path(path) if path else None
         if self._path:
             ensure_dir_exists(str(self._path.parent))

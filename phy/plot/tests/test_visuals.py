@@ -9,23 +9,23 @@ import os
 
 import numpy as np
 
+from phy.utils.color import _random_color
+
+from ..transform import NDC, Rotate, range_transform
 from ..visuals import (
-    ScatterVisual,
-    PatchVisual,
-    PlotVisual,
     HistogramVisual,
-    LineVisual,
-    LineAggGeomVisual,
-    PlotAggVisual,
-    PolygonVisual,
-    TextVisual,
     ImageVisual,
+    LineAggGeomVisual,
+    LineVisual,
+    PatchVisual,
+    PlotAggVisual,
+    PlotVisual,
+    PolygonVisual,
+    ScatterVisual,
+    TextVisual,
     UniformPlotVisual,
     UniformScatterVisual,
 )
-from ..transform import NDC, Rotate, range_transform
-from phy.utils.color import _random_color
-
 
 # ------------------------------------------------------------------------------
 # Fixtures

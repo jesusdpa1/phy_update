@@ -10,10 +10,11 @@ import logging
 import numpy as np
 from pytest import fixture
 
-from ..base import BaseVisual, GLSLInserter, gloo
-from ..transform import subplot_bounds, Translate, Scale, Range, Clip, Subplot, TransformChain
-from . import mouse_click, mouse_drag, mouse_press, key_press, key_release
 from phy.gui.qt import QOpenGLWindow
+
+from ..base import BaseVisual, GLSLInserter, gloo
+from ..transform import Clip, Range, Scale, Subplot, TransformChain, Translate, subplot_bounds
+from . import key_press, key_release, mouse_click, mouse_drag, mouse_press
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +56,7 @@ def fragment_shader():
 
 class MyVisual(BaseVisual):
     def __init__(self):
-        super(MyVisual, self).__init__()
+        super().__init__()
         self.set_shader('simple')
         self.set_primitive_type('lines')
 
@@ -148,7 +149,7 @@ def test_visual_2(qtbot, canvas, vertex_shader, fragment_shader):
 
     class MyVisual2(BaseVisual):
         def __init__(self):
-            super(MyVisual2, self).__init__()
+            super().__init__()
             self.vertex_shader = vertex_shader
             self.fragment_shader = fragment_shader
             self.set_primitive_type('points')

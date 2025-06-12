@@ -5,29 +5,26 @@
 # Imports
 # ------------------------------------------------------------------------------
 
-from contextlib import contextmanager
 import logging
-from pathlib import Path
 import sys
+from contextlib import contextmanager
+from pathlib import Path
 from traceback import format_exception
 
 import click
-
-from phylib import add_default_handler, _Formatter  # noqa
-from phylib import _logger_date_fmt, _logger_fmt  # noqa
+from phylib import _Formatter, _logger_date_fmt, _logger_fmt, add_default_handler  # noqa  # noqa
 
 from phy import __version_git__
 from phy.gui.qt import QtDialogLogger
-from phy.utils.profiling import _enable_profiler, _enable_pdb
+from phy.utils.profiling import _enable_pdb, _enable_profiler
 
 from .base import (  # noqa
     BaseController,
-    WaveformMixin,
     FeatureMixin,
     TemplateMixin,
     TraceMixin,
+    WaveformMixin,
 )
-
 
 logger = logging.getLogger(__name__)
 

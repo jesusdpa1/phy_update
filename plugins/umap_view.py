@@ -1,6 +1,6 @@
 """Show how to write a custom dimension reduction view."""
 
-from phy import IPlugin, Bunch
+from phy import Bunch, IPlugin
 from phy.cluster.views import ScatterView
 
 
@@ -14,7 +14,6 @@ def umap(x):
 class WaveformUMAPView(ScatterView):
     """Every view corresponds to a unique view class, so we need to subclass ScatterView."""
 
-    pass
 
 
 class ExampleWaveformUMAPPlugin(IPlugin):

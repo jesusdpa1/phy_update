@@ -8,13 +8,13 @@
 import logging
 
 import numpy as np
+from phylib.utils import connect, emit, unconnect
 
-from phy.utils.color import _add_selected_clusters_colors
-from phylib.utils import emit, connect, unconnect
-
-from phy.plot.transform import range_transform, NDC
+from phy.plot.transform import NDC, range_transform
 from phy.plot.visuals import ScatterVisual, TextVisual
-from .base import ManualClusteringView, BaseGlobalView, MarkerSizeMixin, BaseColorView
+from phy.utils.color import _add_selected_clusters_colors
+
+from .base import BaseColorView, BaseGlobalView, ManualClusteringView, MarkerSizeMixin
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
     }
 
     def __init__(self, cluster_ids=None, cluster_info=None, bindings=None, **kwargs):
-        super(ClusterScatterView, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.state_attrs += (
             'scaling',
             'x_axis',
@@ -272,7 +272,7 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
     def toggle_log_scale(self, dim, checked):
         """Toggle logarithmic scaling for one of the dimensions."""
         self._size_min = None
-        setattr(self, '%s_log_scale' % dim, checked)
+        setattr(self, f'{dim}_log_scale', checked)
         self.prepare_data()
         self.plot()
         self.canvas.update()
@@ -294,7 +294,7 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
 
     def attach(self, gui):
         """Attach the GUI."""
-        super(ClusterScatterView, self).attach(gui)
+        super().attach(gui)
 
         def _make_action(dim, name):
             def callback():
@@ -310,14 +310,14 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
 
         # Change the bindings.
         for dim in self._dims:
-            view_submenu = 'Change %s' % dim
+            view_submenu = f'Change {dim}'
 
             # Change to every cluster info.
             for name in self.fields:
                 self.actions.add(
                     _make_action(dim, name),
                     show_shortcut=False,
-                    name='Change %s to %s' % (dim, name),
+                    name=f'Change {dim} to {name}',
                     view_submenu=view_submenu,
                 )
 
@@ -327,9 +327,9 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
                 _make_log_toggle(dim),
                 checkable=True,
                 view_submenu=view_submenu,
-                name='Toggle log scale for %s' % dim,
+                name=f'Toggle log scale for {dim}',
                 show_shortcut=False,
-                checked=getattr(self, '%s_log_scale' % dim),
+                checked=getattr(self, f'{dim}_log_scale'),
             )
 
         self.actions.separator()
@@ -361,7 +361,7 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
         self._update_labels()
 
     def on_select(self, *args, **kwargs):
-        super(ClusterScatterView, self).on_select(*args, **kwargs)
+        super().on_select(*args, **kwargs)
         self.update_select_color()
 
     def on_cluster(self, sender, up):
@@ -371,7 +371,7 @@ class ClusterScatterView(MarkerSizeMixin, BaseColorView, BaseGlobalView, ManualC
 
     @property
     def status(self):
-        return 'Size: %s. Color scheme: %s.' % (self.size, self.color_scheme)
+        return f'Size: {self.size}. Color scheme: {self.color_scheme}.'
 
     # Interactivity
     # -------------------------------------------------------------------------
