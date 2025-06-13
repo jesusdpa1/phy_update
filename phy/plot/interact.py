@@ -52,7 +52,9 @@ class Grid(BaseLayout):
     active_box = (0, 0)
     _scaling = (1.0, 1.0)
 
-    def __init__(self, shape=(1, 1), shape_var='u_grid_shape', box_var=None, has_clip=True):
+    def __init__(
+        self, shape=(1, 1), shape_var='u_grid_shape', box_var=None, has_clip=True
+    ):
         super().__init__(box_var=box_var)
         self.shape_var = shape_var
         self._shape = shape
@@ -250,7 +252,9 @@ class Boxed(BaseLayout):
             logger.log(5, 'Update visual with interact Boxed.')
             visual.program['u_box_pos'] = box_pos
             visual.program['n_boxes'] = self.n_boxes
-            visual.program['u_box_size'] = np.array(self.box_size) * np.array(self._box_scaling)
+            visual.program['u_box_size'] = np.array(self.box_size) * np.array(
+                self._box_scaling
+            )
             visual.program['u_layout_scaling'] = self._layout_scaling
 
     def update_boxes(self, box_pos):
@@ -325,7 +329,10 @@ class Boxed(BaseLayout):
     # --------------------------------------------------------------------------
 
     def _increment_layout_scaling(self, cw=1.0, ch=1.0):
-        self._layout_scaling = (self._layout_scaling[0] * cw, self._layout_scaling[1] * ch)
+        self._layout_scaling = (
+            self._layout_scaling[0] * cw,
+            self._layout_scaling[1] * ch,
+        )
         self.update()
 
     @property

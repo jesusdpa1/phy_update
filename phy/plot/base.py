@@ -218,12 +218,16 @@ def _get_glsl(to_insert, shader_type=None, location=None, exclude_origins=()):
     return '\n'.join(
         snippet
         for (shader_type_, location_, origin_, snippet) in to_insert
-        if shader_type_ == shader_type and location_ == location and origin_ not in exclude_origins
+        if shader_type_ == shader_type
+        and location_ == location
+        and origin_ not in exclude_origins
     )
 
 
 def _repl_vars(snippet, varout, varin):
-    snippet = snippet.replace('{{varout}}', varout if varout != 'gl_Position' else 'pos_tmp')
+    snippet = snippet.replace(
+        '{{varout}}', varout if varout != 'gl_Position' else 'pos_tmp'
+    )
     return snippet.replace('{{varin}}', varin)
 
 
@@ -243,7 +247,9 @@ class GLSLInserter:
 
     def _init_insert(self):
         self.insert_vert('vec2 {{varout}} = {{varin}};', 'before_transforms', index=0)
-        self.insert_vert('gl_Position = vec4({{varout}}, 0., 1.);', 'after_transforms', index=0)
+        self.insert_vert(
+            'gl_Position = vec4({{varout}}, 0., 1.);', 'after_transforms', index=0
+        )
         self.insert_vert('varying vec2 v_{{varout}};\n', 'header', index=0)
         self.insert_frag('varying vec2 v_{{varout}};\n', 'header', index=0)
 
@@ -311,7 +317,9 @@ class GLSLInserter:
         # Clipping.
         clip = tc.get('Clip')
         if clip:
-            self.insert_frag(clip.glsl('v_{{varout}}'), 'before_transforms', origin=origin)
+            self.insert_frag(
+                clip.glsl('v_{{varout}}'), 'before_transforms', origin=origin
+            )
 
     def insert_into_shaders(self, vertex, fragment, exclude_origins=()):
         """Insert all GLSL snippets in a vertex and fragment shaders.
@@ -359,7 +367,9 @@ class GLSLInserter:
         # Define pos_orig only once.
         for varout, varin in self._variables:
             if varout == 'gl_Position':
-                self.insert_vert(f'vec2 pos_orig = {varin};', 'before_transforms', index=0)
+                self.insert_vert(
+                    f'vec2 pos_orig = {varin};', 'before_transforms', index=0
+                )
 
         # Replace the variable placeholders.
         to_insert = []
@@ -385,7 +395,11 @@ class GLSLInserter:
         def repl(m):
             varout, varin = m.group(1), m.group(2)
             varout = varout if varout != 'gl_Position' else 'pos_tmp'
-            return indent(vs_insert).replace('{{varout}}', varout).replace('{{varin}}', varin)
+            return (
+                indent(vs_insert)
+                .replace('{{varout}}', varout)
+                .replace('{{varin}}', varin)
+            )
 
         vertex = self._transform_regex.sub(repl, vertex)
 
@@ -419,11 +433,35 @@ class GLSLInserter:
 
 
 def get_modifiers(e):
-    """Return modifier names from a Qt event."""
+    """Return modifier names from a Qt event with Qt5/Qt6 compatibility."""
     m = e.modifiers()
-    return tuple(
-        name for name in ('Shift', 'Control', 'Alt', 'Meta') if m & getattr(Qt, f'{name}Modifier')
-    )
+
+    # Handle PyQt6 vs PyQt5 modifier detection
+    modifier_names = []
+    try:
+        # Try PyQt6 style first
+        from PyQt6.QtCore import Qt
+
+        if m & Qt.KeyboardModifier.ShiftModifier:
+            modifier_names.append('Shift')
+        if m & Qt.KeyboardModifier.ControlModifier:
+            modifier_names.append('Control')
+        if m & Qt.KeyboardModifier.AltModifier:
+            modifier_names.append('Alt')
+        if m & Qt.KeyboardModifier.MetaModifier:
+            modifier_names.append('Meta')
+    except ImportError:
+        # Fall back to PyQt5 style
+        if m & getattr(Qt, 'ShiftModifier', 0):
+            modifier_names.append('Shift')
+        if m & getattr(Qt, 'ControlModifier', 0):
+            modifier_names.append('Control')
+        if m & getattr(Qt, 'AltModifier', 0):
+            modifier_names.append('Alt')
+        if m & getattr(Qt, 'MetaModifier', 0):
+            modifier_names.append('Meta')
+
+    return tuple(modifier_names)
 
 
 _BUTTON_MAP = {1: 'Left', 2: 'Right', 4: 'Middle'}
@@ -467,23 +505,32 @@ _SUPPORTED_KEYS = (
 
 
 def mouse_info(e):
-    """Extract the position and button of a Qt mouse event with Qt5/Qt6 compatibility.
-
-    Returns integer coordinates for consistent polygon drawing behavior.
-    """
+    """Extract the position and button of a Qt mouse event with Qt5/Qt6 compatibility."""
     # Handle position - Qt6 uses position(), Qt5 uses pos()
     if hasattr(e, 'position'):
         # Qt6 - returns QPointF (floating point), convert to integers
         p = e.position()
-        x, y = round(p.x()), round(p.y())  # Round to nearest integers
+        x, y = round(p.x()), round(p.y())
     else:
         # Qt5 - returns QPoint (integer) directly
         p = e.pos()
         x, y = p.x(), p.y()
 
-    # Get button info
+    # Handle button with Qt5/Qt6 compatibility
     b = e.button()
-    return (x, y), _BUTTON_MAP.get(b)
+
+    # Convert button to integer for _BUTTON_MAP lookup
+    try:
+        # PyQt6: button() returns enum, need to convert to int
+        if hasattr(b, 'value'):
+            button_int = b.value
+        else:
+            button_int = int(b)
+    except (ValueError, TypeError):
+        # Fallback for any other cases
+        button_int = None
+
+    return (x, y), _BUTTON_MAP.get(button_int, None)
 
 
 def key_info(e):
@@ -515,7 +562,9 @@ class LazyProgram(gloo.Program):
     def __setitem__(self, name, data):
         # Remove all past items with the current name.
         if self._is_lazy:
-            self._update_queue[:] = ((n, d) for (n, d) in self._update_queue if n != name)
+            self._update_queue[:] = (
+                (n, d) for (n, d) in self._update_queue if n != name
+            )
             self._update_queue.append((name, data))
         else:
             with suppress(IndexError):
@@ -711,7 +760,12 @@ class BaseCanvas(QOpenGLWindow):
                 if size != self._size:
                     visual.on_resize(*size)
                 # Do not draw if there are no vertices.
-                if not visual._hidden and visual.n_vertices > 0 and size[0] > 10 and size[1] > 10:
+                if (
+                    not visual._hidden
+                    and visual.n_vertices > 0
+                    and size[0] > 10
+                    and size[1] > 10
+                ):
                     logger.log(5, 'Draw visual `%s`.', visual)
                     visual.on_draw()
             self._size = size
