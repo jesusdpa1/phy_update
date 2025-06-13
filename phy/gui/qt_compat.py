@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-"""Qt5/Qt6 compatibility layer for phy.
+"""Qt5/Qt6 compatibility layer for phy with proper Mac modifier key handling.
 
 This module provides a unified interface for both Qt5 and Qt6, handling:
 - Import differences between PyQt5 and PyQt6
@@ -10,9 +10,11 @@ This module provides a unified interface for both Qt5 and Qt6, handling:
 - Method signature changes (exec_() vs exec())
 - PIL API compatibility for icon generation
 - Layout direction and widget feature detection
+- Mac modifier key mapping (Command, Option, Control keys)
 """
 
 import logging
+import sys
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -52,15 +54,22 @@ if QT_VERSION is None:
 if QT_VERSION == 6:
     # PyQt6 imports
     from PyQt6.QtCore import (
+        QAbstractItemModel,
         QByteArray,
         QCoreApplication,
+        QDir,
         QEvent,
         QEventLoop,
+        QFileInfo,
+        QItemSelectionModel,
         QMetaObject,
+        QMimeData,
         QObject,
         QPoint,
+        QRect,
         QRunnable,
         QSize,
+        QStandardPaths,
         Qt,
         QThreadPool,
         QTimer,
@@ -81,6 +90,9 @@ if QT_VERSION == 6:
         QMouseEvent,
         QPainter,
         QPixmap,
+        QShortcut,
+        QStandardItem,
+        QStandardItemModel,
         QWindow,
     )
 
@@ -101,26 +113,48 @@ if QT_VERSION == 6:
     from PyQt6.QtWebEngineCore import QWebEnginePage  # Moved in Qt6
     from PyQt6.QtWebEngineWidgets import QWebEngineView
     from PyQt6.QtWidgets import (
+        QAbstractItemView,
         QApplication,
         QCheckBox,
+        QComboBox,
         QDockWidget,
         QDoubleSpinBox,
+        QFileDialog,
+        QFrame,
         QGridLayout,
+        QGroupBox,
         QHBoxLayout,
+        QHeaderView,
         QInputDialog,
         QLabel,
         QLineEdit,
+        QListView,
+        QListWidget,
+        QListWidgetItem,
         QMainWindow,
         QMenu,
         QMenuBar,
         QMessageBox,
         QPlainTextEdit,
+        QProgressBar,
         QPushButton,
         QScrollArea,
         QSlider,
         QSpinBox,
+        QSplitter,
         QStatusBar,
+        QStyleOptionTab,
+        QStylePainter,
+        QTabBar,
+        QTableView,
+        QTableWidget,
+        QTableWidgetItem,
+        QTabWidget,
+        QTextEdit,
         QToolBar,
+        QTreeView,
+        QTreeWidget,
+        QTreeWidgetItem,
         QVBoxLayout,
         QWidget,
     )
@@ -128,15 +162,22 @@ if QT_VERSION == 6:
 else:  # QT_VERSION == 5
     # PyQt5 imports
     from PyQt5.QtCore import (
+        QAbstractItemModel,
         QByteArray,
         QCoreApplication,
+        QDir,
         QEvent,
         QEventLoop,
+        QFileInfo,
+        QItemSelectionModel,
         QMetaObject,
+        QMimeData,
         QObject,
         QPoint,
+        QRect,
         QRunnable,
         QSize,
+        QStandardPaths,
         Qt,
         QThreadPool,
         QTimer,
@@ -157,6 +198,8 @@ else:  # QT_VERSION == 5
         QOpenGLWindow,
         QPainter,
         QPixmap,
+        QStandardItem,
+        QStandardItemModel,
         QWindow,
     )
 
@@ -172,27 +215,50 @@ else:  # QT_VERSION == 5
         QWebEngineView,
     )
     from PyQt5.QtWidgets import (
+        QAbstractItemView,
         QAction,  # In QtWidgets in Qt5
         QApplication,
         QCheckBox,
+        QComboBox,
         QDockWidget,
         QDoubleSpinBox,
+        QFileDialog,
+        QFrame,
         QGridLayout,
+        QGroupBox,
         QHBoxLayout,
+        QHeaderView,
         QInputDialog,
         QLabel,
         QLineEdit,
+        QListView,
+        QListWidget,
+        QListWidgetItem,
         QMainWindow,
         QMenu,
         QMenuBar,
         QMessageBox,
         QPlainTextEdit,
+        QProgressBar,
         QPushButton,
         QScrollArea,
+        QShortcut,
         QSlider,
         QSpinBox,
+        QSplitter,
         QStatusBar,
+        QStyleOptionTab,
+        QStylePainter,
+        QTabBar,
+        QTableView,
+        QTableWidget,
+        QTableWidgetItem,
+        QTabWidget,
+        QTextEdit,
         QToolBar,
+        QTreeView,
+        QTreeWidget,
+        QTreeWidgetItem,
         QVBoxLayout,
         QWidget,
     )
@@ -268,6 +334,19 @@ class QtCompat:
         AlignBottom = Qt.AlignmentFlag.AlignBottom
         AlignVCenter = Qt.AlignmentFlag.AlignVCenter
 
+        # Text interaction flags
+        TextSelectableByMouse = Qt.TextInteractionFlag.TextSelectableByMouse
+        TextSelectableByKeyboard = Qt.TextInteractionFlag.TextSelectableByKeyboard
+
+        # Text flags
+        TextDontClip = Qt.TextFlag.TextDontClip
+        AlignCenter = Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignVCenter
+
+        # Scroll bar policies
+        ScrollBarAlwaysOff = Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        ScrollBarAlwaysOn = Qt.ScrollBarPolicy.ScrollBarAlwaysOn
+        ScrollBarAsNeeded = Qt.ScrollBarPolicy.ScrollBarAsNeeded
+
     else:  # Qt5
         # Qt5 uses integer constants
         CheckState = Qt
@@ -332,6 +411,19 @@ class QtCompat:
         AlignBottom = Qt.AlignBottom
         AlignVCenter = Qt.AlignVCenter
 
+        # Text interaction flags
+        TextSelectableByMouse = Qt.TextSelectableByMouse
+        TextSelectableByKeyboard = Qt.TextSelectableByKeyboard
+
+        # Text flags
+        TextDontClip = Qt.TextDontClip
+        AlignCenter = Qt.AlignHCenter | Qt.AlignVCenter
+
+        # Scroll bar policies
+        ScrollBarAlwaysOff = Qt.ScrollBarAlwaysOff
+        ScrollBarAlwaysOn = Qt.ScrollBarAlwaysOn
+        ScrollBarAsNeeded = Qt.ScrollBarAsNeeded
+
     @staticmethod
     def is_checked(state):
         """Check if a Qt checkbox state represents 'checked'."""
@@ -395,6 +487,14 @@ class QtCompat:
             return loop.exec_()
 
     @staticmethod
+    def exec_file_dialog(dialog):
+        """Execute a QFileDialog with proper method name for Qt version."""
+        if QT_VERSION == 6:
+            return dialog.exec()
+        else:
+            return dialog.exec_()
+
+    @staticmethod
     def check_dock_feature(features, target_feature):
         """Check if dock widget has a specific feature (handles Qt5/Qt6 enum differences)."""
         try:
@@ -439,16 +539,38 @@ class QtCompat:
 
     @staticmethod
     def get_modifier_keys(event):
-        """Get modifier keys from a Qt event in a compatible way."""
+        """Get modifier keys from a Qt event with proper Mac handling."""
         modifiers = event.modifiers()
         result = []
 
-        modifier_map = [
-            ('Shift', QtCompat.ShiftModifier),
-            ('Control', QtCompat.ControlModifier),
-            ('Alt', QtCompat.AltModifier),
-            ('Meta', QtCompat.MetaModifier),
-        ]
+        # Handle macOS modifier key mapping differences
+        if sys.platform == 'darwin':  # macOS
+            # On Mac:
+            # - Qt::ControlModifier = Command key (⌘)
+            # - Qt::MetaModifier = Control key
+            # - Qt::AltModifier = Option key (⌥)
+            modifier_map = [
+                ('Shift', QtCompat.ShiftModifier),
+                (
+                    'Control',
+                    QtCompat.MetaModifier,
+                ),  # Control key on Mac maps to Qt::MetaModifier
+                (
+                    'Alt',
+                    QtCompat.AltModifier,
+                ),  # Option key on Mac maps to Qt::AltModifier
+                (
+                    'Command',
+                    QtCompat.ControlModifier,
+                ),  # Command key on Mac maps to Qt::ControlModifier
+            ]
+        else:  # Windows/Linux
+            modifier_map = [
+                ('Shift', QtCompat.ShiftModifier),
+                ('Control', QtCompat.ControlModifier),
+                ('Alt', QtCompat.AltModifier),
+                ('Meta', QtCompat.MetaModifier),
+            ]
 
         for name, modifier in modifier_map:
             try:
@@ -460,6 +582,247 @@ class QtCompat:
                     result.append(name)
 
         return tuple(result)
+
+    @staticmethod
+    def get_platform_modifier_name(qt_modifier):
+        """Get the platform-appropriate name for a Qt modifier."""
+        if sys.platform == 'darwin':  # macOS
+            modifier_names = {
+                QtCompat.ControlModifier: 'Cmd',  # Command key
+                QtCompat.MetaModifier: 'Ctrl',  # Control key
+                QtCompat.AltModifier: 'Option',  # Option key
+                QtCompat.ShiftModifier: 'Shift',
+            }
+        else:  # Windows/Linux
+            modifier_names = {
+                QtCompat.ControlModifier: 'Ctrl',
+                QtCompat.AltModifier: 'Alt',
+                QtCompat.MetaModifier: 'Meta',
+                QtCompat.ShiftModifier: 'Shift',
+            }
+
+        return modifier_names.get(qt_modifier, 'Unknown')
+
+    @staticmethod
+    def create_key_sequence(key_string):
+        """Create a QKeySequence with proper platform handling."""
+        # Qt automatically handles Ctrl->Cmd mapping on Mac for QKeySequence
+        # But you might want to explicitly handle other cases
+        if sys.platform == 'darwin':
+            # Replace common Windows/Linux shortcuts with Mac equivalents if needed
+            key_string = key_string.replace('Meta+', 'Ctrl+')  # Real Control key on Mac
+
+        return QKeySequence(key_string)
+
+    @staticmethod
+    def is_mac_platform():
+        """Check if running on macOS."""
+        return sys.platform == 'darwin'
+
+    @staticmethod
+    def is_windows_platform():
+        """Check if running on Windows."""
+        return sys.platform == 'win32'
+
+    @staticmethod
+    def is_linux_platform():
+        """Check if running on Linux."""
+        return sys.platform.startswith('linux')
+
+    @staticmethod
+    def get_primary_modifier():
+        """Get the primary modifier key for the platform (Ctrl on Win/Linux, Cmd on Mac)."""
+        if sys.platform == 'darwin':
+            return QtCompat.ControlModifier  # Maps to Command key on Mac
+        else:
+            return QtCompat.ControlModifier  # Maps to Control key on Win/Linux
+
+    @staticmethod
+    def get_platform_shortcut_text(shortcut_text):
+        """Convert shortcut text to platform-appropriate format."""
+        if sys.platform == 'darwin':
+            # Convert to Mac-style shortcuts
+            return (
+                shortcut_text.replace('Ctrl+', '⌘')
+                .replace('Alt+', '⌥')
+                .replace('Shift+', '⇧')
+                .replace('Meta+', '⌃')
+            )  # Control key
+        else:
+            return shortcut_text
+
+    @staticmethod
+    def get_save_filename(
+        parent=None, caption='', directory='', filter='', selected_filter=''
+    ):
+        """Get save filename with Qt5/Qt6 compatibility."""
+        filename, _ = QFileDialog.getSaveFileName(
+            parent, caption, directory, filter, selected_filter
+        )
+        return filename
+
+    @staticmethod
+    def get_open_filename(
+        parent=None, caption='', directory='', filter='', selected_filter=''
+    ):
+        """Get open filename with Qt5/Qt6 compatibility."""
+        filename, _ = QFileDialog.getOpenFileName(
+            parent, caption, directory, filter, selected_filter
+        )
+        return filename
+
+    @staticmethod
+    def get_existing_directory(parent=None, caption='', directory=''):
+        """Get existing directory with Qt5/Qt6 compatibility."""
+        return QFileDialog.getExistingDirectory(parent, caption, directory)
+
+    @staticmethod
+    def copy_to_clipboard(text):
+        """Copy text to clipboard."""
+        clipboard = QGuiApplication.clipboard()
+        clipboard.setText(text)
+
+    @staticmethod
+    def get_clipboard_text():
+        """Get text from clipboard."""
+        clipboard = QGuiApplication.clipboard()
+        return clipboard.text()
+
+    @staticmethod
+    def get_documents_path():
+        """Get the Documents directory path."""
+        try:
+            if QT_VERSION == 6:
+                return QStandardPaths.writableLocation(
+                    QStandardPaths.StandardLocation.DocumentsLocation
+                )
+            else:
+                return QStandardPaths.writableLocation(QStandardPaths.DocumentsLocation)
+        except Exception:
+            return str(Path.home() / 'Documents')
+
+    @staticmethod
+    def get_desktop_path():
+        """Get the Desktop directory path."""
+        try:
+            if QT_VERSION == 6:
+                return QStandardPaths.writableLocation(
+                    QStandardPaths.StandardLocation.DesktopLocation
+                )
+            else:
+                return QStandardPaths.writableLocation(QStandardPaths.DesktopLocation)
+        except Exception:
+            return str(Path.home() / 'Desktop')
+
+    @staticmethod
+    def setup_table_widget(table, headers, data=None):
+        """Setup a QTableWidget with proper compatibility."""
+        table.setColumnCount(len(headers))
+        table.setHorizontalHeaderLabels(headers)
+
+        if data:
+            table.setRowCount(len(data))
+            for row, row_data in enumerate(data):
+                for col, cell_data in enumerate(row_data):
+                    item = QTableWidgetItem(str(cell_data))
+                    table.setItem(row, col, item)
+
+        # Auto-resize columns
+        header = table.horizontalHeader()
+        if QT_VERSION == 6:
+            header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        else:
+            header.setResizeMode(QHeaderView.ResizeToContents)
+
+    @staticmethod
+    def create_shortcut(key_sequence, parent, callback):
+        """Create a QShortcut with proper compatibility."""
+        shortcut = QShortcut(QKeySequence(key_sequence), parent)
+        shortcut.activated.connect(callback)
+        return shortcut
+
+    @staticmethod
+    def set_tab_position(tab_widget, position):
+        """Set tab position with Qt5/Qt6 compatibility."""
+        if QT_VERSION == 6:
+            position_map = {
+                'north': QTabWidget.TabPosition.North,
+                'south': QTabWidget.TabPosition.South,
+                'west': QTabWidget.TabPosition.West,
+                'east': QTabWidget.TabPosition.East,
+            }
+        else:
+            position_map = {
+                'north': QTabWidget.North,
+                'south': QTabWidget.South,
+                'west': QTabWidget.West,
+                'east': QTabWidget.East,
+            }
+
+        tab_widget.setTabPosition(position_map.get(position, position_map['north']))
+
+    @staticmethod
+    def set_frame_style(frame, shape, shadow):
+        """Set frame style with Qt5/Qt6 compatibility."""
+        if QT_VERSION == 6:
+            shape_map = {
+                'box': QFrame.Shape.Box,
+                'panel': QFrame.Shape.Panel,
+                'hline': QFrame.Shape.HLine,
+                'vline': QFrame.Shape.VLine,
+            }
+            shadow_map = {
+                'plain': QFrame.Shadow.Plain,
+                'raised': QFrame.Shadow.Raised,
+                'sunken': QFrame.Shadow.Sunken,
+            }
+        else:
+            shape_map = {
+                'box': QFrame.Box,
+                'panel': QFrame.Panel,
+                'hline': QFrame.HLine,
+                'vline': QFrame.VLine,
+            }
+            shadow_map = {
+                'plain': QFrame.Plain,
+                'raised': QFrame.Raised,
+                'sunken': QFrame.Sunken,
+            }
+
+        frame.setFrameShape(shape_map.get(shape, shape_map['box']))
+        frame.setFrameShadow(shadow_map.get(shadow, shadow_map['plain']))
+
+    @staticmethod
+    def set_table_selection_behavior(table, behavior):
+        """Set table selection behavior with Qt5/Qt6 compatibility."""
+        if QT_VERSION == 6:
+            behavior_map = {
+                'rows': QAbstractItemView.SelectionBehavior.SelectRows,
+                'columns': QAbstractItemView.SelectionBehavior.SelectColumns,
+                'items': QAbstractItemView.SelectionBehavior.SelectItems,
+            }
+        else:
+            behavior_map = {
+                'rows': QAbstractItemView.SelectRows,
+                'columns': QAbstractItemView.SelectColumns,
+                'items': QAbstractItemView.SelectItems,
+            }
+
+        table.setSelectionBehavior(behavior_map.get(behavior, behavior_map['rows']))
+
+    @staticmethod
+    def set_table_edit_triggers(table, triggers):
+        """Set table edit triggers with Qt5/Qt6 compatibility."""
+        if QT_VERSION == 6:
+            if triggers == 'none':
+                table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+            elif triggers == 'all':
+                table.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
+        else:
+            if triggers == 'none':
+                table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+            elif triggers == 'all':
+                table.setEditTriggers(QAbstractItemView.AllEditTriggers)
 
 
 # -----------------------------------------------------------------------------
@@ -766,6 +1129,117 @@ def remove_input_hook():
 
 
 # -----------------------------------------------------------------------------
+# Shortcut helper functions
+# -----------------------------------------------------------------------------
+
+
+def get_copy_shortcut():
+    """Get the platform-appropriate copy shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Copy  # Automatically maps to Cmd+C
+    else:
+        return QKeySequence('Ctrl+C')
+
+
+def get_paste_shortcut():
+    """Get the platform-appropriate paste shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Paste  # Automatically maps to Cmd+V
+    else:
+        return QKeySequence('Ctrl+V')
+
+
+def get_save_shortcut():
+    """Get the platform-appropriate save shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Save  # Automatically maps to Cmd+S
+    else:
+        return QKeySequence('Ctrl+S')
+
+
+def get_undo_shortcut():
+    """Get the platform-appropriate undo shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Undo  # Automatically maps to Cmd+Z
+    else:
+        return QKeySequence('Ctrl+Z')
+
+
+def get_redo_shortcut():
+    """Get the platform-appropriate redo shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Redo  # Automatically maps to Cmd+Shift+Z
+    else:
+        return QKeySequence('Ctrl+Y')
+
+
+def get_quit_shortcut():
+    """Get the platform-appropriate quit shortcut."""
+    if QtCompat.is_mac_platform():
+        return QKeySequence.StandardKey.Quit  # Automatically maps to Cmd+Q
+    else:
+        return QKeySequence('Ctrl+Q')
+
+
+# -----------------------------------------------------------------------------
+# Example usage functions
+# -----------------------------------------------------------------------------
+
+
+def handle_key_event(event):
+    """Example of how to handle key events with proper Mac support."""
+    modifiers = QtCompat.get_modifier_keys(event)
+
+    if QtCompat.is_mac_platform():
+        # On Mac, check for Command key (which Qt reports as ControlModifier)
+        if 'Command' in modifiers and event.key() == Qt.Key_C:
+            print('Copy command detected on Mac')
+        elif 'Control' in modifiers and event.key() == Qt.Key_C:
+            print('Actual Control key pressed on Mac (rare)')
+        elif 'Alt' in modifiers and event.key() == Qt.Key_C:
+            print('Option key + C pressed on Mac')
+    else:
+        # On Windows/Linux, standard behavior
+        if 'Control' in modifiers and event.key() == Qt.Key_C:
+            print('Copy command detected on Windows/Linux')
+        elif 'Alt' in modifiers and event.key() == Qt.Key_C:
+            print('Alt + C pressed on Windows/Linux')
+
+
+def create_platform_aware_shortcut(base_shortcut):
+    """Create a shortcut that's aware of platform differences."""
+    if QtCompat.is_mac_platform():
+        # Convert Windows/Linux shortcuts to Mac equivalents
+        mac_shortcut = (
+            base_shortcut.replace('Ctrl+', 'Cmd+')
+            .replace('Alt+', 'Option+')
+            .replace('Meta+', 'Ctrl+')
+        )  # Real Control key on Mac
+        return QKeySequence(mac_shortcut)
+    else:
+        return QKeySequence(base_shortcut)
+
+
+def get_modifier_display_text(modifiers):
+    """Get display text for modifiers appropriate for the platform."""
+    if not modifiers:
+        return ''
+
+    if QtCompat.is_mac_platform():
+        # Use Mac symbols
+        symbols = {
+            'Shift': '⇧',
+            'Control': '⌃',  # Real Control key
+            'Alt': '⌥',  # Option key
+            'Command': '⌘',  # Command key
+        }
+        return ''.join(symbols.get(mod, mod) for mod in modifiers)
+    else:
+        # Use standard text
+        return '+'.join(modifiers) + '+'
+
+
+# -----------------------------------------------------------------------------
 # Export commonly used Qt objects with compatibility
 # -----------------------------------------------------------------------------
 
@@ -798,6 +1272,7 @@ __all__ = [
     'QTimer',
     'QObject',
     'QPoint',
+    'QRect',
     'QSize',
     'QIcon',
     'QColor',
@@ -830,6 +1305,38 @@ __all__ = [
     'QSlider',
     'QSpinBox',
     'QDoubleSpinBox',
+    # New widgets for enhanced functionality
+    'QTabWidget',
+    'QTabBar',
+    'QFileDialog',
+    'QTableWidget',
+    'QTableView',
+    'QHeaderView',
+    'QAbstractItemView',
+    'QTextEdit',
+    'QFrame',
+    'QSplitter',
+    'QGroupBox',
+    'QProgressBar',
+    'QComboBox',
+    'QTreeWidget',
+    'QTreeView',
+    'QListWidget',
+    'QListView',
+    'QShortcut',
+    'QStandardItemModel',
+    'QStandardItem',
+    'QTreeWidgetItem',
+    'QTableWidgetItem',
+    'QListWidgetItem',
+    'QAbstractItemModel',
+    'QItemSelectionModel',
+    'QStandardPaths',
+    'QDir',
+    'QFileInfo',
+    'QMimeData',
+    'QStylePainter',
+    'QStyleOptionTab',
     # Compatibility helpers
     'get_matplotlib_backend',
     'get_matplotlib_canvas',
@@ -842,6 +1349,16 @@ __all__ = [
     'get_qt_test',
     'remove_input_hook',
     'setup_qt_environment',
+    # Shortcut helpers
+    'get_copy_shortcut',
+    'get_paste_shortcut',
+    'get_save_shortcut',
+    'get_undo_shortcut',
+    'get_redo_shortcut',
+    'get_quit_shortcut',
+    'create_platform_aware_shortcut',
+    'get_modifier_display_text',
+    'handle_key_event',
     # Original Qt module for advanced usage
     'Qt' + ('6' if QT_VERSION == 6 else '5'),  # Qt6 or Qt5 for accessing original
 ]
@@ -881,6 +1398,7 @@ def get_qt_version_string():
 def print_qt_info():
     """Print information about the Qt version and available features."""
     print(f'Using {get_qt_version_string()}')
+    print(f'Platform: {sys.platform}')
     print(f'QOpenGLWindow available: {QOpenGLWindow is not None}')
     print(f'QOpenGLWidget available: {QOpenGLWidget is not None}')
 
@@ -890,6 +1408,18 @@ def print_qt_info():
         print(f'Matplotlib canvas available: {canvas_class is not None}')
     except Exception as e:
         print(f'Matplotlib backend error: {e}')
+
+    # Print platform-specific modifier info
+    if QtCompat.is_mac_platform():
+        print('Mac modifier mapping:')
+        print('  Qt::ControlModifier -> Command key (⌘)')
+        print('  Qt::MetaModifier -> Control key (⌃)')
+        print('  Qt::AltModifier -> Option key (⌥)')
+    else:
+        print('Windows/Linux modifier mapping:')
+        print('  Qt::ControlModifier -> Control key')
+        print('  Qt::AltModifier -> Alt key')
+        print('  Qt::MetaModifier -> Meta/Windows key')
 
 
 def check_qt_dependencies():
@@ -917,8 +1447,40 @@ def check_qt_dependencies():
     return True
 
 
+def test_modifier_keys():
+    """Test function to verify modifier key mapping works correctly."""
+    print('Testing modifier key mapping...')
+    print(f'Platform: {sys.platform}')
+
+    # Create a mock event-like object for testing
+    class MockEvent:
+        def __init__(self, modifiers):
+            self._modifiers = modifiers
+
+        def modifiers(self):
+            return self._modifiers
+
+    # Test different modifier combinations
+    test_cases = [
+        (QtCompat.ControlModifier, 'Control/Command'),
+        (QtCompat.AltModifier, 'Alt/Option'),
+        (QtCompat.MetaModifier, 'Meta/Control'),
+        (QtCompat.ShiftModifier, 'Shift'),
+        (QtCompat.ControlModifier | QtCompat.AltModifier, 'Control+Alt'),
+    ]
+
+    for modifier, description in test_cases:
+        event = MockEvent(modifier)
+        detected = QtCompat.get_modifier_keys(event)
+        print(f'  {description}: {detected}')
+
+    print('Test complete.')
+
+
 # Log successful initialization
 logger.info(f'Qt compatibility layer initialized with {get_qt_version_string()}')
+if QtCompat.is_mac_platform():
+    logger.info('Mac modifier key mapping enabled')
 
 # Note: setup_high_dpi() is available but not called automatically due to known issues
 # on various systems. Call manually if needed, but be aware of potential scaling problems.

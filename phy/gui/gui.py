@@ -37,6 +37,7 @@ from .qt import (
 )
 from .qt import screenshot as make_screenshot
 from .state import GUIState, _get_default_state_path, _gui_state_path
+from .styles import DOCK_STATUS_STYLESHEET, DOCK_TITLE_STYLESHEET
 
 logger = logging.getLogger(__name__)
 
@@ -81,62 +82,6 @@ def _try_get_opengl_canvas(view):
 
 def _widget_position(widget):  # pragma: no cover
     return widget.parentWidget().mapToGlobal(widget.geometry().topLeft())
-
-
-# -----------------------------------------------------------------------------
-# Dock widget
-# -----------------------------------------------------------------------------
-
-DOCK_TITLE_STYLESHEET = """
-    * {
-        padding: 0;
-        margin: 0;
-        border: 0;
-        background: #232426;
-        color: white;
-    }
-
-    QPushButton {
-        padding: 4px;
-        margin: 0 1px;
-    }
-
-    QCheckBox {
-        padding: 2px 4px;
-        margin: 0 1px;
-    }
-
-    QLabel {
-        padding: 3px;
-    }
-
-    QPushButton:hover, QCheckBox:hover {
-        background: #323438;
-    }
-
-    QPushButton:pressed {
-        background: #53575e;
-    }
-
-    QPushButton:checked {
-        background: #6c717a;
-    }
-"""
-
-
-DOCK_STATUS_STYLESHEET = """
-    * {
-        padding: 0;
-        margin: 0;
-        border: 0;
-        background: black;
-        color: white;
-    }
-
-    QLabel {
-        padding: 3px;
-    }
-"""
 
 
 class DockWidget(QDockWidget):
@@ -551,30 +496,18 @@ class GUI(QMainWindow):
         # Mapping {name: menuBar}.
         self._menus = {}
         ds = self.default_shortcuts
-        self.file_actions = Actions(
-            self, name='File', menu='&File', default_shortcuts=ds
-        )
-        self.view_actions = Actions(
-            self, name='View', menu='&View', default_shortcuts=ds
-        )
-        self.help_actions = Actions(
-            self, name='Help', menu='&Help', default_shortcuts=ds
-        )
+        self.file_actions = Actions(self, name='File', menu='&File', default_shortcuts=ds)
+        self.view_actions = Actions(self, name='View', menu='&View', default_shortcuts=ds)
+        self.help_actions = Actions(self, name='Help', menu='&Help', default_shortcuts=ds)
 
         # Views,
         self._views = []
-        self._view_class_indices = defaultdict(
-            int
-        )  # Dictionary {view_name: next_usable_index}
+        self._view_class_indices = defaultdict(int)  # Dictionary {view_name: next_usable_index}
 
         # Create the GUI state.
         state_path = _gui_state_path(self.name, config_dir=config_dir)
-        default_state_path = kwargs.pop(
-            'default_state_path', _get_default_state_path(self)
-        )
-        self.state = GUIState(
-            state_path, default_state_path=default_state_path, **kwargs
-        )
+        default_state_path = kwargs.pop('default_state_path', _get_default_state_path(self))
+        self.state = GUIState(state_path, default_state_path=default_state_path, **kwargs)
 
         # View creator: dictionary {view_class: function_that_adds_view}
         self.default_views = default_views or ()
@@ -651,26 +584,29 @@ class GUI(QMainWindow):
             )
         self.view_actions.separator()
 
-        # Help menu.
         @self.help_actions.add(shortcut=('HelpContents', 'h'))
         def show_all_shortcuts():
-            """Show the shortcuts of all actions."""
-            for actions in self.actions:
-                actions.show_shortcuts()
-
-        @self.help_actions.add(shortcut='?')
-        def about():  # pragma: no cover
-            """Display an about dialog."""
-            from phy import __version_git__
-
-            msg = f'phy {self.name} v{__version_git__}'
+            """Show the shortcuts of all actions in a popup window, or console if no GUI."""
             try:
-                from phylib import __version__
+                # Check if we have a valid GUI environment
+                if (
+                    QApplication.instance() is not None
+                    and self.isVisible()
+                    and not self.isMinimized()
+                ):
+                    # GUI is available - show popup dialog
+                    from .shortcuts_dialog import show_shortcuts_dialog
 
-                msg += f'\nphylib v{__version__}'
-            except ImportError:
-                pass
-            QMessageBox.about(self, 'About', msg)
+                    show_shortcuts_dialog(self)
+                else:
+                    # No GUI or GUI not ready - fall back to console
+                    for actions in self.actions:
+                        actions.show_shortcuts()
+            except Exception as e:
+                # If popup fails for any reason, fall back to console
+                logger.debug(f'Failed to show shortcuts dialog: {e}')
+                for actions in self.actions:
+                    actions.show_shortcuts()
 
     # Events
     # -------------------------------------------------------------------------
@@ -777,16 +713,10 @@ class GUI(QMainWindow):
         """Create and add as many views as specified in view_count."""
         self.view_actions.separator()
         # Keep the order of self.default_views.
-        view_names = [
-            vn for vn in self.default_views if vn in self._requested_view_count
-        ]
+        view_names = [vn for vn in self.default_views if vn in self._requested_view_count]
         # We add the views in the requested view count, but not in the default views.
         view_names.extend(
-            [
-                vn
-                for vn in self._requested_view_count.keys()
-                if vn not in self.default_views
-            ]
+            [vn for vn in self._requested_view_count.keys() if vn not in self.default_views]
         )
         # Remove duplicates in view names.
         view_names = _remove_duplicates(view_names)
@@ -799,9 +729,7 @@ class GUI(QMainWindow):
             for i in range(n_views):
                 self.create_and_add_view(view_name)
 
-    def add_view(
-        self, view, position=None, closable=True, floatable=True, floating=None
-    ):
+    def add_view(self, view, position=None, closable=True, floatable=True, floating=None):
         """Add a dock widget to the main window.
 
         Parameters
@@ -858,9 +786,7 @@ class GUI(QMainWindow):
             if not insert_before:
                 self.menuBar().addMenu(menu)
             else:
-                self.menuBar().insertMenu(
-                    self.get_menu(insert_before).menuAction(), menu
-                )
+                self.menuBar().insertMenu(self.get_menu(insert_before).menuAction(), menu)
             self._menus[name] = menu
         return self._menus[name]
 

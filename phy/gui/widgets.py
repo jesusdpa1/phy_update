@@ -71,15 +71,11 @@ class IPythonView(RichJupyterWidget):
 
     def inject(self, **kwargs):
         """Inject variables into the IPython namespace."""
-        logger.debug(
-            'Injecting variables into the kernel: %s.', ', '.join(kwargs.keys())
-        )
+        logger.debug('Injecting variables into the kernel: %s.', ', '.join(kwargs.keys()))
         try:
             self.kernel.shell.push(kwargs)
         except Exception as e:  # pragma: no cover
-            logger.error(
-                'Could not inject variables to the IPython kernel: %s.', str(e)
-            )
+            logger.error('Could not inject variables to the IPython kernel: %s.', str(e))
 
     def attach(self, gui, **kwargs):
         """Add the view to the GUI, start the kernel, and inject the specified variables."""
@@ -469,9 +465,7 @@ class Table(HTMLWidget):
         """
         self.build(lambda html: emit('ready', self))
 
-        connect(
-            event='select', sender=self, func=lambda *args: self.update(), last=True
-        )
+        connect(event='select', sender=self, func=lambda *args: self.update(), last=True)
         connect(event='ready', sender=self, func=lambda *args: self._set_ready())
 
     def _set_ready(self):
@@ -652,9 +646,7 @@ class KeyValueWidget(QWidget):
     @property
     def names(self):
         """List of field names."""
-        return sorted(
-            {i[0] if '[' not in i[0] else i[0][: i[0].index('[')] for i in self._items}
-        )
+        return sorted({i[0] if '[' not in i[0] else i[0][: i[0].index('[')] for i in self._items})
 
     def get_widget(self, name):
         """Get the widget of a field."""

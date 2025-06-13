@@ -108,10 +108,19 @@ def _get_qkeysequence(shortcut):
     if isinstance(shortcut, (tuple, list)):
         return [_get_qkeysequence(s) for s in shortcut]
     assert isinstance(shortcut, str)
+
+    # Handle Qt standard keys first
     if hasattr(QKeySequence, shortcut):
         return QKeySequence(getattr(QKeySequence, shortcut))
+
+    # Create sequence from string
     sequence = QKeySequence.fromString(shortcut)
-    assert not sequence.isEmpty()
+
+    # FIXED: Don't assert if empty, just log a warning and return empty list
+    if sequence.isEmpty():
+        logger.warning("Could not create keyboard shortcut for: '%s'", shortcut)
+        return []
+
     return sequence
 
 
@@ -121,7 +130,7 @@ def _show_shortcuts(shortcuts):
     for n in sorted(shortcuts):
         shortcut = _get_shortcut_string(shortcuts[n])
         if not n.startswith('_') and not shortcut.startswith('-'):
-            out.append(f'- {n:<40} {shortcut:s}')
+            out.append('- {0:<40} {1:s}'.format(n, shortcut))
     if out:
         print('Keyboard shortcuts')
         print('\n'.join(out))
@@ -134,7 +143,7 @@ def _show_snippets(snippets):
     for n in sorted(snippets):
         snippet = snippets[n]
         if not n.startswith('_'):
-            out.append(f'- {n:<40} :{snippet:s}')
+            out.append('- {0:<40} :{1:s}'.format(n, snippet))
     if out:
         print('Snippets')
         print('\n'.join(out))
@@ -185,20 +194,36 @@ def _create_qaction(gui, **kwargs):
     # Create the QAction instance.
     name = kwargs.get('name', '')
     name = name[0].upper() + name[1:].replace('_', ' ')
-    action = QAction(name, gui)
+
+    # Get the shortcut for display in menu
+    shortcut = kwargs.get('shortcut', None)
+    if shortcut:
+        # Convert shortcut to display format
+        if isinstance(shortcut, (list, tuple)):
+            shortcut_text = ', '.join(str(s) for s in shortcut)
+        else:
+            shortcut_text = str(shortcut)
+        # Use tab character for proper alignment in Qt menus
+        display_name = f'{name}\t{shortcut_text}'
+    else:
+        display_name = name
+
+    action = QAction(display_name, gui)
 
     # Show an input dialog if there are args.
-    callback = kwargs.get('callback')
+    callback = kwargs.get('callback', None)
     title = getattr(callback, '__name__', 'action')
     # Number of expected arguments.
-    n_args = kwargs.get('n_args') or len(_expected_args(callback))
+    n_args = kwargs.get('n_args', None) or len(_expected_args(callback))
 
     @wraps(callback)
     def wrapped(is_checked, *args):
-        if kwargs.get('checkable'):
+        if kwargs.get('checkable', None):
             args = (is_checked,) + args
-        if kwargs.get('prompt'):
-            args += _prompt_args(title, docstring, default=kwargs.get('prompt_default')) or ()
+        if kwargs.get('prompt', None):
+            args += (
+                _prompt_args(title, docstring, default=kwargs.get('prompt_default', None)) or ()
+            )
             if not args:  # pragma: no cover
                 logger.debug('User cancelled input prompt, aborting.')
                 return
@@ -209,30 +234,53 @@ def _create_qaction(gui, **kwargs):
             return
         try:
             # Set a busy cursor if set_busy is True.
-            with busy_cursor(kwargs.get('set_busy')):
+            with busy_cursor(kwargs.get('set_busy', None)):
                 return callback(*args)
         except Exception:  # pragma: no cover
             logger.warning('Error when executing action %s.', name)
             logger.debug(''.join(traceback.format_exception(*sys.exc_info())))
 
     action.triggered.connect(wrapped)
-    sequence = _get_qkeysequence(kwargs.get('shortcut'))
-    if not isinstance(sequence, (tuple, list)):
-        sequence = [sequence]
-    action.setShortcuts(sequence)
-    assert kwargs.get('docstring')
-    docstring = re.sub(r'\s+', ' ', kwargs.get('docstring'))
-    docstring += f' (alias: {kwargs.get("alias")})'
+
+    # IMPROVED: Better shortcut handling
+    if shortcut:
+        sequence = _get_qkeysequence(shortcut)
+        if not isinstance(sequence, (tuple, list)):
+            sequence = [sequence] if sequence else []
+
+        # Filter out empty sequences
+        valid_sequences = [seq for seq in sequence if seq and not seq.isEmpty()]
+
+        if valid_sequences:
+            action.setShortcuts(valid_sequences)
+            logger.debug(
+                "Set shortcuts %s for action '%s'",
+                [seq.toString() for seq in valid_sequences],
+                name,
+            )
+        else:
+            logger.warning(
+                "No valid shortcuts created for action '%s' (shortcut was: '%s')",
+                name,
+                shortcut,
+            )
+
+    # Set docstring
+    docstring = kwargs.get('docstring', None)
+    assert docstring, "No docstring provided for action '{}'".format(name)
+    docstring = re.sub(r'\s+', ' ', docstring)
+    alias = kwargs.get('alias', '')
+    docstring += ' (alias: {})'.format(alias)
     action.setStatusTip(docstring)
     action.setWhatsThis(docstring)
-    action.setCheckable(kwargs.get('checkable'))
-    action.setChecked(kwargs.get('checked'))
-    if kwargs.get('icon'):
+    action.setCheckable(kwargs.get('checkable', None))
+    action.setChecked(kwargs.get('checked', None))
+    if kwargs.get('icon', None):
         action.setIcon(_get_icon(kwargs['icon']))
     return action
 
 
-class Actions:
+class Actions(object):
     """Group of actions bound to a GUI.
 
     This class attaches to a GUI and implements the following features:
@@ -410,7 +458,12 @@ class Actions:
         action = _create_qaction(self.gui, **kwargs)
         action_obj = Bunch(qaction=action, **kwargs)
         if verbose and not name.startswith('_'):
-            logger.log(5, 'Add action `%s` (%s).', name, _get_shortcut_string(action.shortcut()))
+            logger.log(
+                5,
+                'Add action `%s` (%s).',
+                name,
+                _get_shortcut_string(action.shortcut()),
+            )
         self.gui.addAction(action)
 
         # Do not show private actions in the menu.
@@ -483,13 +536,13 @@ class Actions:
         # Get the action.
         action = self._actions_dict.get(name, None)
         if not action:
-            raise ValueError(f"Action `{name}` doesn't exist.")
+            raise ValueError("Action `{}` doesn't exist.".format(name))
         if not name.startswith('_'):
             logger.debug('Execute action `%s`.', name)
         try:
             return action.callback(*args)
         except TypeError as e:
-            logger.warning(f'Invalid action arguments: {str(e)}')
+            logger.warning('Invalid action arguments: ' + str(e))
             return
 
     def remove(self, name):
@@ -516,10 +569,10 @@ class Actions:
             if not action.shortcut and not action.alias:
                 continue
             # Only show alias for actions with no shortcut.
-            alias_str = f' (:{action.alias})' if action.alias != name else ''
+            alias_str = ' (:%s)' % action.alias if action.alias != name else ''
             shortcut = action.shortcut or '-'
             shortcut = shortcut if isinstance(action.shortcut, str) else ', '.join(shortcut)
-            out[name] = f'{shortcut}{alias_str}'
+            out[name] = '%s%s' % (shortcut, alias_str)
         return out
 
     def show_shortcuts(self):
@@ -531,7 +584,7 @@ class Actions:
         return name in self._actions_dict
 
     def __repr__(self):
-        return f'<Actions {sorted(self._actions_dict)}>'
+        return '<Actions {}>'.format(sorted(self._actions_dict))
 
 
 # -----------------------------------------------------------------------------
@@ -539,7 +592,7 @@ class Actions:
 # -----------------------------------------------------------------------------
 
 
-class Snippets:
+class Snippets(object):
     """Provide keyboard snippets to quickly execute actions from a GUI.
 
     This class attaches to a GUI and an `Actions` instance. To every command
@@ -644,13 +697,15 @@ class Snippets:
                 return callback
 
             # Lowercase letters.
-            self.actions.add(name=f'_snippet_{i}', shortcut=char, callback=_make_func(char))
+            self.actions.add(
+                name='_snippet_{}'.format(i), shortcut=char, callback=_make_func(char)
+            )
 
             # Uppercase letters.
             if char in self._snippet_chars[:26]:
                 self.actions.add(
-                    name=f'_snippet_{i}_upper',
-                    shortcut=f'shift+{char}',
+                    name='_snippet_{}_upper'.format(i),
+                    shortcut='shift+' + char,
                     callback=_make_func(char.upper()),
                 )
 

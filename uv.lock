@@ -1924,7 +1924,7 @@ dev = [
 [[package]]
 name = "phylib"
 version = "2.6.0"
-source = { git = "https://github.com/jesusdpa1/phylib_update.git#dcbdb716a9cd100f53ae0817a2b01140e71d838e" }
+source = { git = "https://github.com/jesusdpa1/phylib_update.git#dc3c45f48d895b2c5884ade608b9dd918b5655fd" }
 dependencies = [
     { name = "dask", version = "2024.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "dask", version = "2025.5.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
