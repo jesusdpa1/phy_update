@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """Qt5/Qt6 compatibility layer for phy with proper Mac modifier key handling.
 
 This module provides a unified interface for both Qt5 and Qt6, handling:
